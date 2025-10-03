@@ -1,24 +1,22 @@
-import { Color, Pieces,  } from './constants';
+import { Color, Direction, Pieces,  } from './constants';
 import { Board } from './board';
 import { Move } from './move';
-import { isSquareOnBoard } from '../utils/board-utils';
+import { isBishopExclusionTile, isKingExclusionTile, isKnightExclusionTile, isPawnExclusionTile, isQueenExclusionTile, isRookExclusionTile, isTileOnBoard } from '../utils/board-utils';
 
 export abstract class Piece {
     public readonly color: Color;
     public position: number;
     public abstract representation(): Pieces;
     public abstract readonly offsets: number[];
-    public firstMove: Boolean = true;
+    public firstMove: boolean = true;
 
     public abstract legalMoves(board: Board): Move[];
 
-    constructor(color: Color, position: number, firstMove = true) {
+    constructor(color: Color, position: number, firstMove: boolean = true) {
         this.color = color;
         this.position = position;
         this.firstMove = firstMove;
-        
     }
-
 
     get direction(): number {
         return this.color == Color.Black ? -1 : 1;
@@ -39,59 +37,51 @@ export class Pawn extends Piece {
 
     constructor(color: Color, position: number, firstMove = true) {
         super(color, position, firstMove);
-        
     }
 
     public legalMoves(board: Board): Move[] {
         let moves: Move[] = [];
 
         for(let offset of this.offsets) {
-            let current_position = this.position + (offset * this.direction);
-            
-            if (!isSquareOnBoard(current_position)) {
+            if(isPawnExclusionTile(this.position, offset * this.direction)) 
                 continue;
-            }
-            // square occupied? 
-            
-            if (offset == 16) {
+
+            let targetPosition = this.position + (offset * this.direction);
+            if(!isTileOnBoard(targetPosition))
+                continue;
+
+            if(offset == 16) {
+                if(this.firstMove == false) 
+                    continue;
+
                 let betweenTile = this.position + (this.direction * 8);
-                // piece in way?
+                if(board.pieces[betweenTile] !== null) 
+                    continue;
 
-                if (this.firstMove == false) {
+                if(board.pieces[targetPosition] !== null) 
                     continue;
-                }
-                if (board.pieces[betweenTile] != null) {
-                    continue;
-                }
-                if (board.pieces[current_position] != null) {
-                    continue;
-                }
 
-                let move: Move = new Move(this.position, current_position);
+                let move: Move = new Move(this.position, targetPosition);
                 moves.push(move);
 
             }
 
             // attack square has opposing piece?
-            else if (offset == 7 || offset == 9) {
-                let targetSquare = board.pieces[current_position];
+            else if(offset == 7 || offset == 9) {
+                let targetSquare = board.pieces[targetPosition];
 
-                if (targetSquare != null && targetSquare.color != this.color) {
-                    let move: Move = new Move(this.position, current_position);
+                if(targetSquare != null && targetSquare.color != this.color) {
+                    let move: Move = new Move(this.position, targetPosition);
                     moves.push(move);
-
                 }
             }
             else {
-                if (board.pieces[current_position] == null) {
-                    let move: Move = new Move(this.position, current_position);
+                if(board.pieces[targetPosition] == null) {
+                    let move: Move = new Move(this.position, targetPosition);
                     moves.push(move);
                 }
-
             }
-
         }
-        
         return moves;
     }
 
@@ -107,21 +97,25 @@ export class Knight extends Piece {
     constructor(color: Color, position: number) {
         super(color, position);
     }
-    // knight lowkey teleport if at pos 0 and +6 and 15 offset
-    // 1st 2nd 7th and 8th file are affected
 
     public legalMoves(board: Board): Move[] {
         let moves: Move[] = [];
 
         for(let offset of this.offsets) {
-            let current_position = this.position + (offset * this.direction);
+            let targetPosition = this.position + (offset * this.direction);
 
-            if (!isSquareOnBoard(current_position)) {
+            if(!isTileOnBoard(targetPosition)) 
                 continue;
-            } 
-            let move: Move = new Move(this.position, current_position);
+
+            if(isKnightExclusionTile(this.position, offset))
+                continue;
+
+            const piece: Piece | null = board.pieces[targetPosition];
+            if(piece !== null && piece.color === this.color) 
+                continue;
+
+            let move: Move = new Move(this.position, targetPosition);
             moves.push(move);
-             
         }
 
         return moves;
@@ -133,35 +127,49 @@ export class Knight extends Piece {
 }
 
 export class Bishop extends Piece {
-    public static readonly BISHOP_OFFSETS: number[] = [-9, -7, 7, 9];
+    public static readonly BISHOP_OFFSETS: number[] = [
+        Direction.NorthEast, 
+        Direction.SouthEast, 
+        Direction.SouthWest,
+        Direction.NorthWest
+    ];
     public readonly offsets: number[] = Bishop.BISHOP_OFFSETS;
 
     constructor(color: Color, position: number) {
         super(color, position);
     }
+
     public legalMoves(board: Board): Move[] {
-            let moves: Move[] = [];
+        let moves: Move[] = [];
 
-            // bishop lowkey teleport if at pos 0 and +7 offset
-            // 1st and 8th lowkey zooted off the fent fr
+        for(let offset of this.offsets) {
+            let targetPosition = this.position;
 
-            for(let offset of this.offsets) {
-                let current_position = this.position + (offset * this.direction);
-                
-                if (!isSquareOnBoard(current_position)) {
-                    continue;
-                }
+            while(isTileOnBoard(targetPosition)) {
+                if(isBishopExclusionTile(targetPosition, offset))
+                    break;
 
-                while (board.pieces[current_position] == null) {
-                    let move: Move = new Move(this.position, current_position);
+                targetPosition += offset;
+
+                if(!isTileOnBoard(targetPosition)) 
+                    break;
+
+                const targetPiece: Piece | null = board.pieces[targetPosition];
+                if(targetPiece !== null && targetPiece.color === this.color) 
+                    break;
+
+                if(targetPiece !== null && targetPiece.color !== this.color) {
+                    let move: Move = new Move(this.position, targetPosition);
                     moves.push(move);
-                    current_position += offset * this.direction;
-
+                    break;
                 }
 
+                let move: Move = new Move(this.position, targetPosition);
+                moves.push(move);
             }
-            return moves;
         }
+        return moves;
+    }
 
     representation() {
         return Pieces.Bishop;
@@ -169,22 +177,62 @@ export class Bishop extends Piece {
 }
 
 export class Rook extends Piece {
-    public static readonly ROOK_OFFSETS: number[] = [-8, -1, 1, 8];
+    public static readonly ROOK_OFFSETS: number[] = [
+        Direction.North, 
+        Direction.East, 
+        Direction.South, 
+        Direction.West
+    ];
     public readonly offsets: number[] = Rook.ROOK_OFFSETS;
     constructor(color: Color, position: number) {
         super(color, position);
     }
     public legalMoves(board: Board): Move[] {
         let moves: Move[] = [];
+        for(let offset of this.offsets) {
+            let targetPosition = this.position;
+
+            while(isTileOnBoard(targetPosition)) {
+                if(isRookExclusionTile(targetPosition, offset))
+                    break;
+
+                targetPosition += offset;
+                if(!isTileOnBoard(targetPosition)) 
+                    break;
+
+                const targetPiece: Piece | null = board.pieces[targetPosition];
+                if(targetPiece !== null && targetPiece.color === this.color) 
+                    break;
+
+                if(targetPiece !== null && targetPiece.color !== this.color) {
+                    let move: Move = new Move(this.position, targetPosition);
+                    moves.push(move);
+                    break;
+                }
+
+                let move: Move = new Move(this.position, targetPosition);
+                moves.push(move);
+            }
+        }
         return moves;
     }
+
     representation() {
         return Pieces.Rook;
     }
 }
 
 export class Queen extends Piece {
-    public static readonly QUEEN_OFFSETS = [-9, -8, -7, -1, 1, 7, 8, 9];
+    public static readonly QUEEN_OFFSETS = [
+        Direction.North,
+        Direction.NorthEast,
+        Direction.East,
+        Direction.SouthEast,
+        Direction.South,
+        Direction.SouthWest,
+        Direction.West,
+        Direction.NorthWest,
+    ];
     public readonly offsets: number[] = Queen.QUEEN_OFFSETS;
     constructor(color: Color, position: number) {
         super(color, position);
@@ -192,6 +240,32 @@ export class Queen extends Piece {
 
     public legalMoves(board: Board): Move[] {
         let moves: Move[] = [];
+        for(let offset of this.offsets) {
+            let targetPosition = this.position;
+
+            while(isTileOnBoard(targetPosition)) {
+                if(isQueenExclusionTile(targetPosition, offset))
+                    break;
+
+                targetPosition += offset;
+
+                if(!isTileOnBoard(targetPosition)) 
+                    break;
+
+                const targetPiece: Piece | null = board.pieces[targetPosition];
+                if(targetPiece !== null && targetPiece.color === this.color) 
+                    break;
+
+                if(targetPiece !== null && targetPiece.color !== this.color) {
+                    let move: Move = new Move(this.position, targetPosition);
+                    moves.push(move);
+                    break;
+                }
+
+                let move: Move = new Move(this.position, targetPosition);
+                moves.push(move);
+            }
+        }
         return moves;
     }
     representation() {
@@ -200,7 +274,16 @@ export class Queen extends Piece {
 }
 
 export class King extends Piece {
-    public static readonly KING_OFFSETS = [-9, -8, -7, -1, 1, 7, 8, 9];
+    public static readonly KING_OFFSETS = [
+        Direction.North,
+        Direction.NorthEast,
+        Direction.East,
+        Direction.SouthEast,
+        Direction.South,
+        Direction.SouthWest,
+        Direction.West,
+        Direction.NorthWest,
+    ];
     public readonly offsets: number[] = King.KING_OFFSETS;
     constructor(color: Color, position: number) {
         super(color, position);
@@ -208,8 +291,24 @@ export class King extends Piece {
 
     public legalMoves(board: Board): Move[] {
         let moves: Move[] = [];
+        for(let offset of this.offsets) {
+            if(isKingExclusionTile(this.position, offset))
+                continue;
+
+            let targetPosition = this.position + offset;
+            if(!isTileOnBoard(targetPosition)) 
+                continue;
+
+            const targetPiece: Piece | null = board.pieces[targetPosition];
+            if(targetPiece !== null && targetPiece.color === this.color) 
+                continue;
+
+            let move: Move = new Move(this.position, targetPosition);
+            moves.push(move);
+        }
         return moves;
     }
+
     representation() {
         return Pieces.King;
     }

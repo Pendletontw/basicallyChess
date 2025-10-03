@@ -30,14 +30,14 @@ function main() {
     new Pawn(Color.White, 14),
     new Pawn(Color.White, 15),
 
-    new Pawn(Color.Black, 48),
-    new Pawn(Color.Black, 49),
-    new Pawn(Color.Black, 50),
-    new Pawn(Color.Black, 51),
-    new Pawn(Color.Black, 52),
-    new Pawn(Color.Black, 53),
-    new Pawn(Color.Black, 54),
-    new Pawn(Color.Black, 55),
+//    new Pawn(Color.Black, 48),
+//    new Pawn(Color.Black, 49),
+//    new Pawn(Color.Black, 50),
+//    new Pawn(Color.Black, 51),
+//    new Pawn(Color.Black, 52),
+//    new Pawn(Color.Black, 53),
+//    new Pawn(Color.Black, 54),
+//    new Pawn(Color.Black, 55),
 
     new Rook(Color.Black, 56),
     new Knight(Color.Black, 58), // swapped knight and bishop for testing purposes 
@@ -50,8 +50,8 @@ function main() {
   ];
 
   const board = new Board(initialPieces);
-  console.log(board.pieces[58]?.representation());
-  let moves: any = board.pieces[58]?.legalMoves(board);
+  console.log(board.pieces[57]?.toString());
+  let moves: any = board.pieces[57]?.legalMoves(board);
   for (let move of moves) {
       console.log(move.start, move.end);
 
