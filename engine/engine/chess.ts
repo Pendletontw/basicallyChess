@@ -1,5 +1,6 @@
 import { Board } from "../model/board";
 import { Castles, Color, DECIMAL, DEFAULT_POSITION, NEXT_RANK, PieceRepresentation, Square, SQUARES } from "../model/constants";
+import { Piece } from "../model/piece";
 
 export default class Chess {
 
@@ -23,27 +24,24 @@ export default class Chess {
     // https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
     public loadFEN(fen: string): void {
         const tokens: string[] = fen.split(/\s+/)
-        const [positions, color, castling, nonpassant, clock, moves] = tokens;
+        const [pieces, color, castling, nonpassant, clock, moves] = tokens;
 
-        let position = 0;
-        for(let character of positions) {
-            // A forward slash represents moving on to the next line. In this case,
-            // move the position up one rank. This is already covered with our other logic.
-            if(character === '/')
-                continue;
+        let position = SQUARES.a1;
+        for(let positions of pieces.split("/").reverse()) {
+            for(let character of positions) {
+                // If the character is a number, it represents the spaces between the pieces
+                // move the position forward as indicated to evaluate the next piece
+                if("123456789".includes(character)) {
+                    position += parseInt(character, DECIMAL);
+                }
 
-            // If the character is a number, it represents the spaces between the pieces
-            // move the position forward as indicated to evaluate the next piece
-            if("123456789".includes(character)) {
-                position += parseInt(character, DECIMAL);
-            }
-
-            // If it is neither, that means it is a piece representation. Build out the
-            // board with indicated pieces and move on to the next position to evaluate.
-            else {
-                const color = character === character.toUpperCase() ? Color.White : Color.Black;
-                this.board.place(character.toLowerCase() as PieceRepresentation, color, position);
-                position++;
+                // If it is neither, that means it is a piece representation. Build out the
+                // board with indicated pieces and move on to the next position to evaluate.
+                else {
+                    const color = character === character.toUpperCase() ? Color.White : Color.Black;
+                    this.board.place(character.toLowerCase() as PieceRepresentation, color, position);
+                    position++;
+                }
             }
         }
 
@@ -58,5 +56,35 @@ export default class Chess {
 
         this.halves = parseInt(clock, DECIMAL);
         this.moves = parseInt(moves, DECIMAL);
+    }
+
+    public switchTurns(): void {
+        this.turn = this.turn === Color.White ? Color.Black : Color.White;
+    }
+
+    public move(from: Square, to: Square): void {
+        const current: number = SQUARES[from];
+        const target: number = SQUARES[to];
+        const piece: Piece | null = this.board.pieces[current];
+        if(piece === null) 
+            throw Error("Not a valid square!");
+
+        console.log(piece.color, piece.position);
+        if(piece.color !== this.turn) 
+            throw Error("Not your piece!");
+
+        for(let move of piece.legalMoves(this.board)) {
+            if(move.start === current && move.end === target) {
+                this.board.movePiece(current, target);
+                this.switchTurns();
+                return;
+            }
+        }
+
+        throw Error("Not legal move!");
+    }
+
+    public isCheckmate(): boolean {
+        return false;
     }
 }
