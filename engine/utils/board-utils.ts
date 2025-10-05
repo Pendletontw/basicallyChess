@@ -105,10 +105,14 @@ export function isPawnExclusionTile(position: number, offset: number) {
 }
 
 export function getRank(position: number): Rank {
-    return Math.floor(position / FILES);
+    return Math.floor(position / FILES) + 1;
 }
 
 export function getFile(position: number): File {
     const LOOKUP = [File.A, File.B, File.C, File.D, File.E, File.F, File.G, File.H]
     return LOOKUP[position % FILES];
+}
+
+export function toAlgebraicNotation(position: number) {
+    return getFile(position) + getRank(position).toString();
 }
