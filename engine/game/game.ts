@@ -17,8 +17,16 @@ export class Game {
         while(!this.chess.isCheckmate()) {
             this.chess.board.toString();
             let [from, to] = await this.prompt();
-            this.chess.move(from as Square, to as Square);
+    
+            try {
+                this.chess.move(from as Square, to as Square);
+            } catch(e: unknown) {
+                if(e instanceof Error) {
+                    console.log(`Unable to make move: ${e.message} Try again.`);
+                }
+            }
         }
+        this.rl.close();
     }
 
     private async prompt(): Promise<string[]> {

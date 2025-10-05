@@ -1,5 +1,5 @@
 import { Board } from "../model/board";
-import { Castles, Color, DECIMAL, DEFAULT_POSITION, NEXT_RANK, PieceRepresentation, Square, SQUARES } from "../model/constants";
+import { Castles, Color, DECIMAL, DEFAULT_POSITION, PieceRepresentation, Square, SQUARES } from "../model/constants";
 import { Piece } from "../model/piece";
 
 export default class Chess {
