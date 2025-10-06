@@ -15,7 +15,7 @@ export class Game {
 
     public async start() {
         while(!this.chess.isCheckmate()) {
-            this.chess.board.toString();
+            console.log(this.chess.board.toString());
             let [from, to] = await this.prompt();
     
             try {
@@ -32,6 +32,6 @@ export class Game {
     private async prompt(): Promise<string[]> {
         const from = await this.rl.question(`[${this.chess.turn}] From: `);
         const to = await this.rl.question(`[${this.chess.turn}] To: `);
-        return [from, to]
+        return [from.trim(), to.trim()]
     }
 }

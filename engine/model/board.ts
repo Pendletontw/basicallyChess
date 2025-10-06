@@ -34,6 +34,11 @@ export class Board {
 
     public movePiece(from: number, to: number): void {
         this.pieces[to] = this.pieces[from];
+        if(this.pieces[to] !== null) {
+            this.pieces[to].firstMove = false;
+            this.pieces[to].position = to;
+        }
+
         delete this.pieces[from];
         this.pieces[from] = null;
     }
@@ -61,7 +66,6 @@ export class Board {
         }
         builder += "  └─────────────────┘\n";
         builder += "    a b c d e f g h";
-        console.log(builder);
         return builder;
     }
 }

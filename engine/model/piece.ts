@@ -61,6 +61,7 @@ export class Pawn extends Piece {
                 if(board.pieces[targetPosition] !== null) 
                     continue;
 
+                let pawn: Pawn = new Pawn(this.color, this.position, false);
                 let move: Move = new Move(this.position, targetPosition, this);
                 moves.push(move);
 

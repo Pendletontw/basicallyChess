@@ -76,9 +76,9 @@ export default class Chess {
     }
 
     public move(from: Square, to: Square): void {
-        const current: number = SQUARES[from];
-        const target: number = SQUARES[to];
-        const piece: Piece | null = this.board.pieces[current];
+        let current: number = SQUARES[from];
+        let target: number = SQUARES[to];
+        let piece: Piece | null = this.board.pieces[current];
         if(piece === null) 
             throw Error("Not a valid square!");
 
