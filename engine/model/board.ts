@@ -35,6 +35,7 @@ export class Board {
     public movePiece(from: number, to: number): void {
         this.pieces[to] = this.pieces[from];
         delete this.pieces[from];
+        this.pieces[from] = null;
     }
 
     public toString(): string {

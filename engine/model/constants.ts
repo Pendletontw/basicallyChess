@@ -109,3 +109,8 @@ export type Castles = {
     "W": {"queen": boolean, "king": boolean}, 
     "B": {"queen": boolean, "king": boolean } 
 };
+
+export type Kings = {
+    "W": number,
+    "B": number,
+};

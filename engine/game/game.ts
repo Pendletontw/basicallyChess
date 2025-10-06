@@ -22,7 +22,7 @@ export class Game {
                 this.chess.move(from as Square, to as Square);
             } catch(e: unknown) {
                 if(e instanceof Error) {
-                    console.log(`Unable to make move: ${e.message} Try again.`);
+                    console.log(`Unable to make move: ${e.message} Try again`); 
                 }
             }
         }

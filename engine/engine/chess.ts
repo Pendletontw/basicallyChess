@@ -1,5 +1,5 @@
 import { Board } from "../model/board";
-import { Castles, Color, DECIMAL, DEFAULT_POSITION, PieceRepresentation, Square, SQUARES } from "../model/constants";
+import { Castles, Color, DECIMAL, DEFAULT_POSITION, KING, Kings, PieceRepresentation, Square, SQUARES } from "../model/constants";
 import { Piece } from "../model/piece";
 
 export default class Chess {
@@ -10,6 +10,11 @@ export default class Chess {
         "W": { "queen": false, "king": false}, 
         "B": { "queen": false, "king": false} 
     };
+
+    public kings: Kings = {
+        "W": -1,
+        "B": -1
+    }
 
     public nonpassant: number | null = null;
 
@@ -39,7 +44,7 @@ export default class Chess {
                 // board with indicated pieces and move on to the next position to evaluate.
                 else {
                     const color = character === character.toUpperCase() ? Color.White : Color.Black;
-                    this.board.place(character.toLowerCase() as PieceRepresentation, color, position);
+                    this._place(character.toLowerCase() as PieceRepresentation, color, position);
                     position++;
                 }
             }
@@ -58,6 +63,14 @@ export default class Chess {
         this.moves = parseInt(moves, DECIMAL);
     }
 
+    private _place(piece: PieceRepresentation, color: Color, position: number) {
+        if(piece === KING) {
+            this.kings[color] = position;
+        }
+        this.board.place(piece, color, position);
+
+    }
+
     public switchTurns(): void {
         this.turn = this.turn === Color.White ? Color.Black : Color.White;
     }
@@ -69,12 +82,14 @@ export default class Chess {
         if(piece === null) 
             throw Error("Not a valid square!");
 
-        console.log(piece.color, piece.position);
         if(piece.color !== this.turn) 
             throw Error("Not your piece!");
 
         for(let move of piece.legalMoves(this.board)) {
             if(move.start === current && move.end === target) {
+                if(piece.representation() === KING) 
+                    this.kings[piece.color] = target;
+
                 this.board.movePiece(current, target);
                 this.switchTurns();
                 return;

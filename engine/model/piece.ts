@@ -61,23 +61,23 @@ export class Pawn extends Piece {
                 if(board.pieces[targetPosition] !== null) 
                     continue;
 
-                let move: Move = new Move(this.position, targetPosition);
+                let move: Move = new Move(this.position, targetPosition, this);
                 moves.push(move);
 
             }
 
             // attack square has opposing piece?
             else if(offset == 7 || offset == 9) {
-                let targetSquare = board.pieces[targetPosition];
+                let targetPiece = board.pieces[targetPosition];
 
-                if(targetSquare != null && targetSquare.color != this.color) {
-                    let move: Move = new Move(this.position, targetPosition);
+                if(targetPiece != null && targetPiece.color != this.color) {
+                    let move: Move = new Move(this.position, targetPosition, this, targetPiece);
                     moves.push(move);
                 }
             }
             else {
                 if(board.pieces[targetPosition] == null) {
-                    let move: Move = new Move(this.position, targetPosition);
+                    let move: Move = new Move(this.position, targetPosition, this);
                     moves.push(move);
                 }
             }
@@ -110,11 +110,11 @@ export class Knight extends Piece {
             if(isKnightExclusionTile(this.position, offset))
                 continue;
 
-            const piece: Piece | null = board.pieces[targetPosition];
-            if(piece !== null && piece.color === this.color) 
+            const targetPiece: Piece | null = board.pieces[targetPosition];
+            if(targetPiece !== null && targetPiece.color === this.color) 
                 continue;
 
-            let move: Move = new Move(this.position, targetPosition);
+            let move: Move = new Move(this.position, targetPosition, this, targetPiece);
             moves.push(move);
         }
 
@@ -155,17 +155,18 @@ export class Bishop extends Piece {
                     break;
 
                 const targetPiece: Piece | null = board.pieces[targetPosition];
+                if(targetPiece === null) {
+                    let move: Move = new Move(this.position, targetPosition, this);
+                    moves.push(move);
+                    continue;
+                }
+
                 if(targetPiece !== null && targetPiece.color === this.color) 
                     break;
 
-                if(targetPiece !== null && targetPiece.color !== this.color) {
-                    let move: Move = new Move(this.position, targetPosition);
-                    moves.push(move);
-                    break;
-                }
-
-                let move: Move = new Move(this.position, targetPosition);
+                let move: Move = new Move(this.position, targetPosition, this, targetPiece);
                 moves.push(move);
+                break;
             }
         }
         return moves;
@@ -201,17 +202,18 @@ export class Rook extends Piece {
                     break;
 
                 const targetPiece: Piece | null = board.pieces[targetPosition];
-                if(targetPiece !== null && targetPiece.color === this.color) 
-                    break;
-
-                if(targetPiece !== null && targetPiece.color !== this.color) {
-                    let move: Move = new Move(this.position, targetPosition);
+                if(targetPiece === null) {
+                    let move: Move = new Move(this.position, targetPosition, this, targetPiece);
                     moves.push(move);
-                    break;
+                    continue;
                 }
 
-                let move: Move = new Move(this.position, targetPosition);
+                if(targetPiece.color === this.color) 
+                    break;
+
+                let move: Move = new Move(this.position, targetPosition, this, targetPiece);
                 moves.push(move);
+                break;
             }
         }
         return moves;
@@ -253,21 +255,23 @@ export class Queen extends Piece {
                     break;
 
                 const targetPiece: Piece | null = board.pieces[targetPosition];
-                if(targetPiece !== null && targetPiece.color === this.color) 
-                    break;
-
-                if(targetPiece !== null && targetPiece.color !== this.color) {
-                    let move: Move = new Move(this.position, targetPosition);
+                if(targetPiece === null) {
+                    let move: Move = new Move(this.position, targetPosition, this, targetPiece);
                     moves.push(move);
-                    break;
+                    continue;
                 }
 
-                let move: Move = new Move(this.position, targetPosition);
+                if(targetPiece.color === this.color) 
+                    break;
+
+                let move: Move = new Move(this.position, targetPosition, this, targetPiece);
                 moves.push(move);
+                break;
             }
         }
         return moves;
     }
+
     representation() {
         return Pieces.Queen;
     }
@@ -303,7 +307,7 @@ export class King extends Piece {
             if(targetPiece !== null && targetPiece.color === this.color) 
                 continue;
 
-            let move: Move = new Move(this.position, targetPosition);
+            let move: Move = new Move(this.position, targetPosition, this, targetPiece);
             moves.push(move);
         }
         return moves;
