@@ -117,3 +117,4 @@ export function toAlgebraicNotation(position: number) {
     return getFile(position) + getRank(position).toString();
 }
 //work
+//
