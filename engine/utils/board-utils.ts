@@ -160,3 +160,5 @@ export function getFile(position: number): File {
 export function toAlgebraicNotation(position: number) {
     return getFile(position) + getRank(position).toString();
 }
+//work
+//
