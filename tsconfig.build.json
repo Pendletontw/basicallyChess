@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [
+      { "path": "packages/chess" },
+      { "path": "packages/frontend" }, 
+      { "path": "packages/cli" }
+  ]
+}

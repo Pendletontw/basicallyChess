@@ -1,6 +1,6 @@
 import * as readline from 'readline/promises';
-import Chess from '../engine/chess';
-import { Square } from '../model/constants';
+import Chess from '@trent/chess';
+import { Square } from '@trent/chess/model/constants';
 
 export class Game {
     private rl: any;
