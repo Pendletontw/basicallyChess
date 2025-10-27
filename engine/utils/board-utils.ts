@@ -1,5 +1,5 @@
 import { Board } from '../model/board';
-import { BOARD_SIZE, FILES, Rank, File, KnightDirection, Direction, SQUARES, Color, CastleTypes, CastleSquares } from '../model/constants';
+import { BOARD_SIZE, FILES, Rank, File, KnightDirection, Direction, Color, CastleTypes, CastleSquares, CastleRookSquare, CastleKingSquare } from '../model/constants';
 import { Piece } from '../model/piece';
 
 export function isTileOnBoard(position: number): boolean {
@@ -22,7 +22,7 @@ export function isTileAttacked(board: Board, position: number, color: Color) {
 
 export function areTilesOccupied(board: Board, tiles: number[]) {
     for(const tile of tiles) {
-        if(!isTileOccupied(board, tile))
+        if(isTileOccupied(board, tile))
             return true;
     }
     return false;
@@ -128,22 +128,24 @@ export function isPawnExclusionTile(position: number, offset: number) {
 }
 
 export function canCastle(board: Board, color: Color, castle: CastleTypes) {
-    const king: Piece | null = board.pieces[SQUARES.e1];
+    const king: Piece | null = board.pieces[CastleKingSquare[color]];
     if(king === null) 
         return false;
 
-    const rook: Piece | null = board.pieces[SQUARES.h1];
+    const rook: Piece | null = board.pieces[CastleRookSquare[color][castle]];
     if(rook === null)
         return false;
 
     if(!king.firstMove || !rook.firstMove) 
         return false;
 
-    if(areTilesOccupied(board, CastleSquares[color][castle])) 
+    if(areTilesOccupied(board, CastleSquares[color][castle])) {
         return false;
+    }
 
-    if(areTilesAttacked(board, color, CastleSquares[color][castle])) 
-       return false;
+    if(areTilesAttacked(board, color, CastleSquares[color][castle])) {
+        return false;
+    }
 
    return true;
 }

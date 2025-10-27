@@ -10,8 +10,8 @@ export class Game {
             input: process.stdin,
             output: process.stdout
         });
-        //this.chess = new Chess('rnbqk1rr/ppppp2p/8/8/8/8/PPPPP2P/RNBQK2R w KQkq - 0 1');
-        this.chess = new Chess();
+        this.chess = new Chess('rnbqk2r/ppppp2p/8/8/8/8/PPPPP2P/RNBQK2R w KQkq - 0 1');
+        //this.chess = new Chess();
     }
 
     public async start() {

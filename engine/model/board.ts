@@ -47,21 +47,17 @@ export class Board {
 
     public updateAttackTiles() {
         for(const piece of this.pieces) {
-            if(piece === null)
+            if(piece === null || piece.representation() === KING)
                 continue;
 
             if(piece.color === Color.White) {
                 for(const move of piece.legalMoves(this)) {
-                    if(move.flags.captured !== null) {
-                        this.whiteAttackTiles.add(move.end);
-                    }
+                    this.whiteAttackTiles.add(move.end);
                 }
             }
             else if(piece.color === Color.Black) {
                 for(const move of piece.legalMoves(this)) {
-                    if(move.flags.captured !== null) {
-                        this.blackAttackTiles.add(move.end);
-                    }
+                    this.blackAttackTiles.add(move.end);
                 }
             }
         }

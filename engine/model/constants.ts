@@ -133,6 +133,22 @@ export const CastleSquares = {
     }
 }
 
+export const CastleKingSquare = {
+    "W": SQUARES.e1,
+    "B": SQUARES.e8
+}
+
+export const CastleRookSquare = {
+    "W": {
+        "qs": SQUARES.a1,
+        "ks": SQUARES.h1
+    },
+    "B": {
+        "qs": SQUARES.a8,
+        "ks": SQUARES.h8
+    }
+}
+
 export type Flags = {
     captured?: Piece | null,
     promotion?: Piece | null,
