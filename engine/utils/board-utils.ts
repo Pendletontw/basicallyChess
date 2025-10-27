@@ -1,5 +1,6 @@
 import { Board } from '../model/board';
-import { BOARD_SIZE, FILES, Rank, File, KnightDirection, Direction } from '../model/constants';
+import { BOARD_SIZE, FILES, Rank, File, KnightDirection, Direction, SQUARES, Color, CastleTypes, CastleSquares } from '../model/constants';
+import { Piece } from '../model/piece';
 
 export function isTileOnBoard(position: number): boolean {
     return position >= 0 && position < BOARD_SIZE;
@@ -11,6 +12,28 @@ export function isTileOccupied(board: Board, position: number): boolean {
     }
 
     return board.pieces[position] !== null;
+}
+
+export function isTileAttacked(board: Board, position: number, color: Color) {
+    if(color === Color.White) 
+        return board.blackAttackTiles.has(position);
+    return board.whiteAttackTiles.has(position);
+}
+
+export function areTilesOccupied(board: Board, tiles: number[]) {
+    for(const tile of tiles) {
+        if(!isTileOccupied(board, tile))
+            return true;
+    }
+    return false;
+}
+
+export function areTilesAttacked(board: Board, color: Color, tiles: number[]) {
+    for(const tile of tiles) {
+        if(isTileAttacked(board, tile, color))
+            return true;
+    }
+    return false;
 }
 
 export function isKnightExclusionTile(position: number, offset: KnightDirection): boolean {
@@ -102,6 +125,27 @@ export function isPawnExclusionTile(position: number, offset: number) {
             // Black pawns
             (offset === Direction.SouthWest && file === File.A) ||
             (offset === Direction.SouthEast && file === File.H));
+}
+
+export function canCastle(board: Board, color: Color, castle: CastleTypes) {
+    const king: Piece | null = board.pieces[SQUARES.e1];
+    if(king === null) 
+        return false;
+
+    const rook: Piece | null = board.pieces[SQUARES.h1];
+    if(rook === null)
+        return false;
+
+    if(!king.firstMove || !rook.firstMove) 
+        return false;
+
+    if(areTilesOccupied(board, CastleSquares[color][castle])) 
+        return false;
+
+    if(areTilesAttacked(board, color, CastleSquares[color][castle])) 
+       return false;
+
+   return true;
 }
 
 export function getRank(position: number): Rank {

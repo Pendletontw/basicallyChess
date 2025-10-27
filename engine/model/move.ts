@@ -1,17 +1,16 @@
+import { Flags } from "./constants";
 import { Piece } from "./piece";
 
 export class Move {
     public start: number;
     public end: number;
     public piece: Piece;
-    public captured: Piece | null;
-    public promotion: Piece | null;
+    public flags: Flags = { captured: null, promotion: null, castle: null };
 
-    constructor(start: number, end: number, piece: Piece, captured?: Piece | null, promotion?: Piece | null) {
+    constructor(start: number, end: number, piece: Piece, flags?: Flags) {
         this.start = start;
         this.end = end;
         this.piece = piece;
-        this.captured = captured || null;
-        this.promotion = promotion || null;
+        this.flags = {...this.flags, ...flags}
     }
 }

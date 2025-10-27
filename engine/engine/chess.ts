@@ -1,5 +1,5 @@
 import { Board } from "../model/board";
-import { Castles, Color, DECIMAL, DEFAULT_POSITION, KING, Kings, PieceRepresentation, Square, SQUARES } from "../model/constants";
+import { Castles, CastleTypes, Color, DECIMAL, DEFAULT_POSITION, KING, Kings, PieceRepresentation, Square, SQUARES } from "../model/constants";
 import { Piece } from "../model/piece";
 
 export default class Chess {
@@ -68,7 +68,6 @@ export default class Chess {
             this.kings[color] = position;
         }
         this.board.place(piece, color, position);
-
     }
 
     public switchTurns(): void {
@@ -85,10 +84,30 @@ export default class Chess {
         if(piece.color !== this.turn) 
             throw Error("Not your piece!");
 
+        this.board.updateAttackTiles();
+
         for(let move of piece.legalMoves(this.board)) {
             if(move.start === current && move.end === target) {
                 if(piece.representation() === KING) 
                     this.kings[piece.color] = target;
+
+                if(move.flags.castle === CastleTypes.KingSide) {
+                    if(piece.color === Color.White) {
+                        this.board.movePiece(SQUARES.h1, SQUARES.f1);
+                    }
+                    else {
+                        this.board.movePiece(SQUARES.h8, SQUARES.f8);
+                    }
+                }
+
+                if(move.flags.castle === CastleTypes.QueenSide) {
+                    if(piece.color === Color.White) {
+                        this.board.movePiece(SQUARES.a1, SQUARES.d1);
+                    }
+                    else {
+                        this.board.movePiece(SQUARES.a8, SQUARES.d8);
+                    }
+                }
 
                 this.board.movePiece(current, target);
                 this.switchTurns();

@@ -1,7 +1,7 @@
-import { Color, Direction, Pieces,  } from './constants';
+import { CastleTypes, Color, Direction, Pieces, SQUARES,  } from './constants';
 import { Board } from './board';
 import { Move } from './move';
-import { isBishopExclusionTile, isKingExclusionTile, isKnightExclusionTile, isPawnExclusionTile, isQueenExclusionTile, isRookExclusionTile, isTileOnBoard } from '../utils/board-utils';
+import { canCastle, isBishopExclusionTile, isKingExclusionTile, isKnightExclusionTile, isPawnExclusionTile, isQueenExclusionTile, isRookExclusionTile, isTileOnBoard } from '../utils/board-utils';
 
 export abstract class Piece {
     public readonly color: Color;
@@ -72,7 +72,7 @@ export class Pawn extends Piece {
                 let targetPiece = board.pieces[targetPosition];
 
                 if(targetPiece != null && targetPiece.color != this.color) {
-                    let move: Move = new Move(this.position, targetPosition, this, targetPiece);
+                    let move: Move = new Move(this.position, targetPosition, this, { captured: targetPiece });
                     moves.push(move);
                 }
             }
@@ -115,7 +115,7 @@ export class Knight extends Piece {
             if(targetPiece !== null && targetPiece.color === this.color) 
                 continue;
 
-            let move: Move = new Move(this.position, targetPosition, this, targetPiece);
+            let move: Move = new Move(this.position, targetPosition, this, { captured: targetPiece });
             moves.push(move);
         }
 
@@ -165,7 +165,7 @@ export class Bishop extends Piece {
                 if(targetPiece !== null && targetPiece.color === this.color) 
                     break;
 
-                let move: Move = new Move(this.position, targetPosition, this, targetPiece);
+                let move: Move = new Move(this.position, targetPosition, this, { captured: targetPiece});
                 moves.push(move);
                 break;
             }
@@ -204,7 +204,7 @@ export class Rook extends Piece {
 
                 const targetPiece: Piece | null = board.pieces[targetPosition];
                 if(targetPiece === null) {
-                    let move: Move = new Move(this.position, targetPosition, this, targetPiece);
+                    let move: Move = new Move(this.position, targetPosition, this, { captured: targetPiece });
                     moves.push(move);
                     continue;
                 }
@@ -212,7 +212,7 @@ export class Rook extends Piece {
                 if(targetPiece.color === this.color) 
                     break;
 
-                let move: Move = new Move(this.position, targetPosition, this, targetPiece);
+                let move: Move = new Move(this.position, targetPosition, this, { captured: targetPiece });
                 moves.push(move);
                 break;
             }
@@ -257,7 +257,7 @@ export class Queen extends Piece {
 
                 const targetPiece: Piece | null = board.pieces[targetPosition];
                 if(targetPiece === null) {
-                    let move: Move = new Move(this.position, targetPosition, this, targetPiece);
+                    let move: Move = new Move(this.position, targetPosition, this, { captured: targetPiece });
                     moves.push(move);
                     continue;
                 }
@@ -265,7 +265,7 @@ export class Queen extends Piece {
                 if(targetPiece.color === this.color) 
                     break;
 
-                let move: Move = new Move(this.position, targetPosition, this, targetPiece);
+                let move: Move = new Move(this.position, targetPosition, this, { captured: targetPiece });
                 moves.push(move);
                 break;
             }
@@ -304,11 +304,23 @@ export class King extends Piece {
             if(!isTileOnBoard(targetPosition)) 
                 continue;
 
+            if(canCastle(board, this.color, CastleTypes.KingSide)) {
+                const tile: number = this.color === Color.White ? SQUARES.g1 : SQUARES.g8;
+                let move: Move = new Move(this.position, tile, this, { castle: CastleTypes.KingSide });
+                moves.push(move);
+            }
+
+            if(canCastle(board, this.color, CastleTypes.QueenSide)) {
+                const tile: number = this.color === Color.White ? SQUARES.c1 : SQUARES.c8;
+                let move: Move = new Move(this.position, tile, this, { castle: CastleTypes.QueenSide });
+                moves.push(move);
+            }
+
             const targetPiece: Piece | null = board.pieces[targetPosition];
             if(targetPiece !== null && targetPiece.color === this.color) 
                 continue;
 
-            let move: Move = new Move(this.position, targetPosition, this, targetPiece);
+            let move: Move = new Move(this.position, targetPosition, this, { captured: targetPiece });
             moves.push(move);
         }
         return moves;

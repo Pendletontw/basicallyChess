@@ -1,3 +1,5 @@
+import { Piece } from "./piece";
+
 export enum Pieces {
     None = "_",
     Pawn = "p",
@@ -110,7 +112,29 @@ export type Castles = {
     "B": {"queen": boolean, "king": boolean } 
 };
 
+export enum CastleTypes {
+    QueenSide = "qs",
+    KingSide = "ks"
+}
+
 export type Kings = {
     "W": number,
     "B": number,
 };
+
+export const CastleSquares = {
+    "W": {
+        "qs": [SQUARES.b1, SQUARES.c1, SQUARES.d1],
+        "ks": [SQUARES.f1, SQUARES.g1]
+    },
+    "B": {
+        "qs": [SQUARES.b8, SQUARES.c8, SQUARES.d8],
+        "ks": [SQUARES.f8, SQUARES.g8]
+    }
+}
+
+export type Flags = {
+    captured?: Piece | null,
+    promotion?: Piece | null,
+    castle?: CastleTypes | null,
+}
