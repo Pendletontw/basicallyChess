@@ -13,6 +13,7 @@
     "type": "commonjs",
     "dependencies": {
         "@trent/core": "^1.0.0",
+        "http-server": "^14.1.1",
         "typescript": "^5.9.3"
     }
 }

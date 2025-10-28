@@ -1,0 +1,88 @@
+*,
+*::before,
+*::after {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	position: relative;
+	background: var(--background);
+}
+
+#board {
+	display: grid;
+	grid-template-columns: repeat(8, 1fr);
+	grid-template-rows: repeat(8, 1fr);
+	width: fit-content;
+	margin-inline: auto;
+	margin-top: 200px;
+	box-shadow: var(--box-shadow);
+	border-radius: var(--border-radius);
+	position: relative;
+	-webkit-user-select: none; /* Safari */
+	-ms-user-select: none; /* IE 10 and IE 11 */
+	user-select: none; /* Standard syntax */
+}
+
+.square {
+	--square-size: 100px;
+	height: var(--square-size);
+	width: var(--square-size);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	position: relative;
+}
+
+.square.drag-over {
+	border: var(--drag-over-border);
+}
+
+.black {
+	background: var(--black);
+}
+
+.white {
+	background: var(--white);
+}
+
+.WhiteTurn {
+	text-align: center;
+	color: var(--white);
+}
+
+.square > img {
+	height: var(--square-size);
+	width: var(--square-size);
+	padding: 1%;
+	cursor: grab;
+}
+
+.square:nth-of-type(1) {
+	border-radius: var(--border-radius) 0 0 0;
+}
+.square:nth-of-type(8) {
+	border-radius: 0 var(--border-radius) 0 0;
+}
+.square:nth-of-type(57) {
+	border-radius: 0 0 0 var(--border-radius);
+}
+.square:nth-of-type(64) {
+	border-radius: 0 0 var(--border-radius) 0;
+}
+
+input:checked ~ #ghost-options {
+	display: none !important;
+	background: red !important;
+}
+
+.database,a {
+	color: aqua;
+	font-size: 50px;
+}
