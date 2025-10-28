@@ -304,8 +304,6 @@ export class King extends Piece {
             if(!isTileOnBoard(targetPosition)) 
                 continue;
 
-
-            board.updateAttackTiles();
             if(canCastle(board, this.color, CastleTypes.KingSide)) {
                 const tile: number = this.color === Color.White ? SQUARES.g1 : SQUARES.g8;
                 let move: Move = new Move(this.position, tile, this, { castle: CastleTypes.KingSide });

@@ -1,5 +1,5 @@
 {
-    "name": "@trent/chess",
+    "name": "@trent/core",
     "version": "1.0.0",
     "description": "A chess engine written in JS",
     "license": "ISC",

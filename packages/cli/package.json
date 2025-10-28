@@ -12,7 +12,7 @@
     "license": "ISC",
     "type": "commonjs",
     "dependencies": {
-        "@trent/chess": "^1.0.0",
+        "@trent/core": "^1.0.0",
         "typescript": "^5.9.3"
     }
 }

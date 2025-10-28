@@ -4,5 +4,5 @@
         "rootDir": "./",
         "outDir": "dist",
     },
-    "references": [{ "path": "../chess" }]
+    "references": [{ "path": "../core" }]
 }

@@ -1,6 +1,6 @@
 import * as readline from 'readline/promises';
-import Chess from '@trent/chess';
-import { Square } from '@trent/chess/model/constants';
+import Chess from '@trent/core';
+import { Square } from '@trent/core/model/constants';
 
 export class Game {
     private rl: any;
@@ -10,7 +10,7 @@ export class Game {
             input: process.stdin,
             output: process.stdout
         });
-        this.chess = new Chess('rnbqk2r/ppppp2p/8/8/8/8/PPPPP2P/RNBQK2R w KQkq - 0 1');
+        this.chess = new Chess('rnbqk1rr/ppppp2p/8/8/8/8/PPPPP2P/RNBQK2R w KQkq - 0 1');
         //this.chess = new Chess();
     }
 
