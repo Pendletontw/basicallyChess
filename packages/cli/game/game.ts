@@ -1,5 +1,5 @@
 import * as readline from 'readline/promises';
-import { Chess } from '@trent/core';
+import Chess from '@trent/core';
 import { Square } from '@trent/core/model/constants';
 
 export class Game {

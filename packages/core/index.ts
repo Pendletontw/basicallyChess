@@ -1,3 +1,3 @@
 import Chess from "./engine/chess";
 
-export { Chess };
+export default Chess;

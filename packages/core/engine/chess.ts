@@ -74,10 +74,8 @@ export default class Chess {
         this.turn = this.turn === Color.White ? Color.Black : Color.White;
     }
 
-    public move(from: Square, to: Square): void {
-        let current: number = SQUARES[from];
-        let target: number = SQUARES[to];
-        let piece: Piece | null = this.board.pieces[current];
+    public moveUsingPosition(from: number, to: number) {
+        let piece: Piece | null = this.board.pieces[from];
         if(piece === null) 
             throw Error("Not a valid square!");
 
@@ -87,9 +85,9 @@ export default class Chess {
         this.board.updateAttackTiles();
 
         for(let move of piece.legalMoves(this.board)) {
-            if(move.start === current && move.end === target) {
+            if(move.start === from && move.end === to) {
                 if(piece.representation() === KING) 
-                    this.kings[piece.color] = target;
+                    this.kings[piece.color] = to;
 
                 if(move.flags.castle === CastleTypes.KingSide) {
                     if(piece.color === Color.White) {
@@ -109,13 +107,19 @@ export default class Chess {
                     }
                 }
 
-                this.board.movePiece(current, target);
+                this.board.movePiece(from, to);
                 this.switchTurns();
                 return;
             }
         }
 
         throw Error("Not legal move!");
+    }
+
+    public move(from: Square, to: Square): void {
+        let current: number = SQUARES[from];
+        let target: number = SQUARES[to];
+        this.moveUsingPosition(current, target);
     }
 
     public isCheckmate(): boolean {
