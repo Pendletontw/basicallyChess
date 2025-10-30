@@ -16,11 +16,14 @@ export default class Chess {
         "B": -1
     }
 
-    public nonpassant: number | null = null;
-
     // " The number of halfmoves since the last capture or pawn advance, used for the fifty-move rule"
     public halves: number = 0;
     public moves: number = 0;
+
+    public nonpassant: number | null = null;
+
+    public whiteAttackTiles: Set<number> = new Set(); 
+    public blackAttackTiles: Set<number> = new Set(); 
 
     constructor(fen = DEFAULT_POSITION) {
         this.loadFEN(fen);
@@ -82,9 +85,9 @@ export default class Chess {
         if(piece.color !== this.turn) 
             throw Error("Not your piece!");
 
-        this.board.updateAttackTiles();
+        this.updateAttackTilesFor(this.turn === Color.White ? Color.Black : Color.White);;
 
-        for(let move of piece.legalMoves(this.board)) {
+        for(let move of piece.legalMoves(this)) {
             if(move.start === from && move.end === to) {
                 if(piece.representation() === KING) 
                     this.kings[piece.color] = to;
@@ -125,4 +128,44 @@ export default class Chess {
     public isCheckmate(): boolean {
         return false;
     }
+
+    private updateAttackTiles() {
+        for(const piece of this.board.pieces) {
+            if(piece === null || piece.representation() === KING)
+                continue;
+
+            if(piece.color === Color.White) {
+                for(const move of piece.legalMoves(this)) {
+                    this.whiteAttackTiles.add(move.end);
+                }
+            }
+            else if(piece.color === Color.Black) {
+                for(const move of piece.legalMoves(this)) {
+                    this.blackAttackTiles.add(move.end);
+                }
+            }
+        }
+    }
+
+    private updateAttackTilesFor(color: Color) {
+        for(const piece of this.board.pieces) {
+            if(piece === null || piece.representation() === KING)
+                continue;
+
+            if(color !== piece.color)
+                continue;
+
+            if(piece.color === Color.White) {
+                for(const move of piece.legalMoves(this)) {
+                    this.whiteAttackTiles.add(move.end);
+                }
+            }
+            else if(piece.color === Color.Black) {
+                for(const move of piece.legalMoves(this)) {
+                    this.blackAttackTiles.add(move.end);
+                }
+            }
+        }
+    }
+
 }

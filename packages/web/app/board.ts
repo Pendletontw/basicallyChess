@@ -7,7 +7,7 @@ class BoardManager {
         if(chessboard === null)
             throw Error("Cannot populate board, board is null");
 
-        for(let i = 0; i < board.pieces.length - 1; i++) {
+        for(let i = 0; i < board.pieces.length; i++) {
             const piece: Piece | null = board.pieces[i];
             if(piece === null) {
                 const square = chessboard.children[i];

@@ -91,7 +91,6 @@ class ChessboardDragController {
         if(this.draggedPiece === null)
             return;
 
-
         const rect = this.draggedPiece.getBoundingClientRect();
         this.originalWidth = rect.width;
         this.originalHeight = rect.height;
@@ -132,25 +131,26 @@ class ChessboardDragController {
             this.currentSquare.classList.remove('drag-over');
         }
 
-        const dropSuccess = this.handleDrop(elementUnderCursor);
+        this.handleDrop(elementUnderCursor);
         this.resetDragState();
     }
 
-    private handleDrop(elementUnderCursor: Element | null): boolean {
-        if (this.isValidDropLocation(elementUnderCursor) && this.draggedPiece && this.originalPosition) {
+    private handleDrop(elementUnderCursor: Element | null) {
+        if(this.draggedPiece && elementUnderCursor && this.originalSquare === elementUnderCursor) {
+            elementUnderCursor.append(this.draggedPiece);
+            return;
+        }
+
+        if (this.isValidDropLocation(elementUnderCursor) && this.draggedPiece && this.originalPosition !== null) {
             this.targetPosition = this.getPositionOfTile(elementUnderCursor);
             if(this.targetPosition) {
                 this.chessManager.makeMove(this.originalPosition, this.targetPosition)
             }
-
-        } else if (this.draggedPiece && this.originalSquare) {
-            //this.originalSquare.appendChild(this.draggedPiece);
         }
+
         if(this.draggedPiece) {
             this.draggedPiece.remove();
         }
-
-        return false;
     }
 
     private moveAt(pageX: number, pageY: number): void {
@@ -182,16 +182,8 @@ class ChessboardDragController {
 
         if (!elementUnderCursor.classList.contains('square')) 
             return false;
+
         return true;
-
-
-        //const square = elementUnderCursor as ChessSquare;
-        //const position = this.getPositionOfTile(square);
-        //for(const move of this.legalMoves) {
-        //    if(position === move.end) 
-        //        return true;
-        //}
-        //return false;
     }
 
     private resetDragState(): void {

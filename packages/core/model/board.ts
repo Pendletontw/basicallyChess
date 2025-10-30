@@ -3,8 +3,6 @@ import { BISHOP, BOARD_SIZE, Color, KING, KNIGHT, PAWN, PieceRepresentation, QUE
 
 export class Board {
     public readonly pieces: (Piece | null)[] = new Array(BOARD_SIZE).fill(null);
-    public whiteAttackTiles: Set<number> = new Set(); 
-    public blackAttackTiles: Set<number> = new Set(); 
 
     constructor(initialPieces: Piece[] = []) {
         for (const piece of initialPieces) {
@@ -43,24 +41,6 @@ export class Board {
 
         delete this.pieces[from];
         this.pieces[from] = null;
-    }
-
-    public updateAttackTiles() {
-        for(const piece of this.pieces) {
-            if(piece === null || piece.representation() === KING)
-                continue;
-
-            if(piece.color === Color.White) {
-                for(const move of piece.legalMoves(this)) {
-                    this.whiteAttackTiles.add(move.end);
-                }
-            }
-            else if(piece.color === Color.Black) {
-                for(const move of piece.legalMoves(this)) {
-                    this.blackAttackTiles.add(move.end);
-                }
-            }
-        }
     }
 
     public toString(): string {

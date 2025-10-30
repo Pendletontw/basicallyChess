@@ -15,7 +15,7 @@ class ChessManager {
         if(piece === null) {
             return [];
         }
-        return piece.legalMoves(this.chess.board);
+        return piece.legalMoves(this.chess);
     }
 
     public makeMove(from: number, to: number): boolean {
@@ -23,7 +23,6 @@ class ChessManager {
             this.chess.moveUsingPosition(from, to);
         } catch (error) { }
         finally {
-            console.log("still repopulating");
             BoardManager.populateBoardFromChess(this.chess.board);
         }
         return true;

@@ -1,3 +1,4 @@
+import Chess from '../engine/chess';
 import { Board } from '../model/board';
 import { BOARD_SIZE, FILES, Rank, File, KnightDirection, Direction, Color, CastleTypes, CastleSquares, CastleRookSquare, CastleKingSquare } from '../model/constants';
 import { Piece } from '../model/piece';
@@ -14,10 +15,10 @@ export function isTileOccupied(board: Board, position: number): boolean {
     return board.pieces[position] !== null;
 }
 
-export function isTileAttacked(board: Board, position: number, color: Color) {
+export function isTileAttacked(chess: Chess, position: number, color: Color) {
     if(color === Color.White) 
-        return board.blackAttackTiles.has(position);
-    return board.whiteAttackTiles.has(position);
+        return chess.blackAttackTiles.has(position);
+    return chess.whiteAttackTiles.has(position);
 }
 
 export function areTilesOccupied(board: Board, tiles: number[]) {
@@ -28,9 +29,9 @@ export function areTilesOccupied(board: Board, tiles: number[]) {
     return false;
 }
 
-export function areTilesAttacked(board: Board, color: Color, tiles: number[]) {
+export function areTilesAttacked(chess: Chess, color: Color, tiles: number[]) {
     for(const tile of tiles) {
-        if(isTileAttacked(board, tile, color))
+        if(isTileAttacked(chess, tile, color))
             return true;
     }
     return false;
@@ -43,21 +44,21 @@ export function isKnightExclusionTile(position: number, offset: KnightDirection)
     const file: File = getFile(position);
     switch(offset) {
         case KnightDirection.NorthNorthEast:
-            return file === File.A;
+            return file === File.H;
         case KnightDirection.NorthEastEast:
-            return file === File.A || file === File.B;
+            return file === File.G || file === File.H;
         case KnightDirection.SouthEastEast:
-            return file === File.A || file === File.B;
+            return file === File.G || file === File.H;
         case KnightDirection.SouthSouthEast:
-            return file === File.A;
+            return file === File.H;
         case KnightDirection.NorthNorthWest:
-            return file === File.H;
+            return file === File.A;
         case KnightDirection.NorthWestWest:
-            return file === File.G || file === File.H;
+            return file === File.A || file === File.B;
         case KnightDirection.SouthWestWest:
-            return file === File.G || file === File.H;
+            return file === File.A || file === File.B;
         case KnightDirection.SouthSouthWest:
-            return file === File.H;
+            return file === File.A;
         default:
             return false;
     }
@@ -127,23 +128,23 @@ export function isPawnExclusionTile(position: number, offset: number) {
             (offset === Direction.SouthEast && file === File.H));
 }
 
-export function canCastle(board: Board, color: Color, castle: CastleTypes) {
-    const king: Piece | null = board.pieces[CastleKingSquare[color]];
+export function canCastle(chess: Chess, color: Color, castle: CastleTypes) {
+    const king: Piece | null = chess.board.pieces[CastleKingSquare[color]];
     if(king === null) 
         return false;
 
-    const rook: Piece | null = board.pieces[CastleRookSquare[color][castle]];
+    const rook: Piece | null = chess.board.pieces[CastleRookSquare[color][castle]];
     if(rook === null)
         return false;
 
     if(!king.firstMove || !rook.firstMove) 
         return false;
 
-    if(areTilesOccupied(board, CastleSquares[color][castle])) {
+    if(areTilesOccupied(chess.board, CastleSquares[color][castle])) {
         return false;
     }
 
-    if(areTilesAttacked(board, color, CastleSquares[color][castle])) {
+    if(areTilesAttacked(chess, color, CastleSquares[color][castle])) {
         return false;
     }
 
@@ -162,5 +163,3 @@ export function getFile(position: number): File {
 export function toAlgebraicNotation(position: number) {
     return getFile(position) + getRank(position).toString();
 }
-//work
-//
