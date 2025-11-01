@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./styles/theme.css" />
     <link rel="stylesheet" href="./styles/style.css" />
+    <script defer type="module" src="./dist/app/index.js"></script>
     <script defer type="module" src="./dist/app/board.js"></script>
     <script defer type="module" src="./dist/app/chess.js"></script>
     <script defer type="module" src="./dist/app/dnd.js"></script>
-    <script defer type="module" src="./dist/app/index.js"></script>
     <title>Chess Engine</title>
 </head>
 <body>
+    <p id="turn"></p>
     <div id="board" class="board" style="transform: rotateX(180deg)">
         <div class="square black" style="transform: rotateX(180deg)">
             <img src="./assets/pieces/standard/W/r.png" alt="">
@@ -150,5 +151,6 @@
         </div>
 
     </div>
+    <button type="button" id="undo">Undo Move</button>
 </body>
 </html>

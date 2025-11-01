@@ -47,20 +47,32 @@ class ChessboardDragController {
 
     private addPieceDragStartListener(): void {
         this.chessboard.addEventListener('mousedown', (event: MouseEvent) => {
-            const target = event.target as ChessPiece;
-
-            console.log("handling mouse down");
-            if(this.twoClickActive) {
-                this.handleMouseUp(event);
-                if(this.notLegal) {
-                    console.log("now in here?");
-                    this.startDrag(event, target);
-                    this.notLegal = false;
+            const target: HTMLElement = event.target as HTMLElement;
+            const isSquare = target.classList.contains("square");
+            const isPiece = target.parentElement?.classList.contains("square");
+            if(isSquare) {
+                console.log("is a square");
+            } 
+            else if(isPiece) {
+                if(target.parentElement && this.originalPosition) {
+                    const position = this.getPositionOfTile(target.parentElement as ChessSquare);
+                    const error = this.chessManager.makeMove(this.originalPosition, position);
+                    if(!error) {
+                        this.resetDragState();
+                        return;
+                    }
+                    
                 }
-                this.twoClickActive = false;
+                console.log("is an image");
+                this.startDrag(event, target as ChessPiece);
+                return;
+            } 
+            else {
+                console.warn("is neither?");
             }
-            else if (target && target.tagName === 'IMG') {
-                this.startDrag(event, target);
+
+            if(target && target.tagName === 'IMG') {
+                this.startDrag(event, target as ChessPiece);
             }
         });
     }

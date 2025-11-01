@@ -1,9 +1,10 @@
 import { Board } from "../model/board";
-import { Castles, CastleTypes, Color, DECIMAL, DEFAULT_POSITION, KING, Kings, PieceRepresentation, Square, SQUARES } from "../model/constants";
-import { Piece } from "../model/piece";
+import { Castles, CastleTypes, Color, DECIMAL, DEFAULT_POSITION, KING, Kings, PieceRepresentation, Pieces, QUEEN, Square, SQUARES } from "../model/constants";
+import { Move } from "../model/move";
+import { Pawn, Piece } from "../model/piece";
+import { opposite } from "../utils/board-utils";
 
 export default class Chess {
-
     public board: Board = new Board();
     public turn: Color = Color.White;
     public castles: Castles = { 
@@ -12,8 +13,7 @@ export default class Chess {
     };
 
     public kings: Kings = {
-        "W": -1,
-        "B": -1
+        "W": -1, "B": -1
     }
 
     // " The number of halfmoves since the last capture or pawn advance, used for the fifty-move rule"
@@ -22,8 +22,11 @@ export default class Chess {
 
     public nonpassant: number | null = null;
 
-    public whiteAttackTiles: Set<number> = new Set(); 
-    public blackAttackTiles: Set<number> = new Set(); 
+    public attackTiles: { "W": Set<number>, "B": Set<number> } = {
+        "W": new Set(), "B": new Set()
+    };
+
+    public history: Move[] = [];
 
     constructor(fen = DEFAULT_POSITION) {
         this.loadFEN(fen);
@@ -66,15 +69,19 @@ export default class Chess {
         this.moves = parseInt(moves, DECIMAL);
     }
 
-    private _place(piece: PieceRepresentation, color: Color, position: number) {
+    private _place(piece: PieceRepresentation, color: Color, position: number, firstMove?: boolean) {
         if(piece === KING) {
             this.kings[color] = position;
         }
-        this.board.place(piece, color, position);
+        this.board.place(piece, color, position, firstMove);
+    }
+
+    private _remove(position: number) {
+        this.board.remove(position);
     }
 
     public switchTurns(): void {
-        this.turn = this.turn === Color.White ? Color.Black : Color.White;
+        this.turn = opposite(this.turn);
     }
 
     public moveUsingPosition(from: number, to: number) {
@@ -85,32 +92,16 @@ export default class Chess {
         if(piece.color !== this.turn) 
             throw Error("Not your piece!");
 
-        this.updateAttackTilesFor(this.turn === Color.White ? Color.Black : Color.White);;
-
-        for(let move of piece.legalMoves(this)) {
+        for(let move of this.getLegalMovesFor(from)) {
             if(move.start === from && move.end === to) {
+                this.history.push(move);
+
                 if(piece.representation() === KING) 
                     this.kings[piece.color] = to;
 
-                if(move.flags.castle === CastleTypes.KingSide) {
-                    if(piece.color === Color.White) {
-                        this.board.movePiece(SQUARES.h1, SQUARES.f1);
-                    }
-                    else {
-                        this.board.movePiece(SQUARES.h8, SQUARES.f8);
-                    }
-                }
-
-                if(move.flags.castle === CastleTypes.QueenSide) {
-                    if(piece.color === Color.White) {
-                        this.board.movePiece(SQUARES.a1, SQUARES.d1);
-                    }
-                    else {
-                        this.board.movePiece(SQUARES.a8, SQUARES.d8);
-                    }
-                }
-
-                this.board.movePiece(from, to);
+                this.board.move(move);
+                this._updateAttackTiles();
+                
                 this.switchTurns();
                 return;
             }
@@ -129,43 +120,116 @@ export default class Chess {
         return false;
     }
 
-    private updateAttackTiles() {
+    public undo(switchTurns: boolean = true) {
+        const move: Move | undefined = this.history.pop();
+        if(move === undefined)
+            return;
+
+        if(move.flags.promotion) {
+            const piece = move.flags.promotion;
+            this._place(Pieces.Pawn, piece.color, move.end, piece.firstMove);
+        }
+
+        if(move.flags.captured) {
+            this._place(move.piece.representation(), move.piece.color, move.start, move.piece.firstMove);
+            this._remove(move.piece.position);
+            const piece: Piece = move.flags.captured;
+            this._place(piece.representation(), piece.color, piece.position, piece.firstMove);
+            this._updateAttackTiles();
+            if(switchTurns)
+                this.switchTurns();
+            return;
+        }
+
+        if(move.flags.castle) {
+            this.board.undoCastle(move.piece.color, move.flags.castle);
+        }
+
+        if(move.flags.firstMove) {
+            move.piece.firstMove = true;
+        }
+
+        if(move.piece.representation() === KING) {
+            this.kings[move.piece.color] = move.start;
+        }
+
+        this._place(
+            move.piece.representation(),
+            move.piece.color,
+            move.start,
+            move.piece.firstMove
+        );
+        this._remove(move.end);
+        this._updateAttackTiles();
+
+        if(switchTurns)
+            this.switchTurns();
+    }
+
+    public getLegalMovesFor(position: number): Move[] { 
+        const piece: Piece | null = this.board.pieces[position];
+        if(piece === null)
+            return [];
+
+        const moves = piece.legalMoves(this).filter((move) => this._isLegalMove(move)); 
+        return moves;
+    }
+
+    private _isLegalMove(move: Move): boolean {
+        this.history.push(move);
+        if(move.piece.representation() === KING) {
+            this.kings[move.piece.color] = move.end;
+        }
+        this.board.move(move);
+        this._updateAttackTilesFor(opposite(this.turn));
+        const result = this._isKingChecked(this.turn);
+        this.undo(false);
+        return !result;
+    }
+
+    private _isKingChecked(color: Color): boolean {
+        const king: Piece | null = this.board.pieces[this.kings[color]];
+        if(king === null) {
+            return true;
+        }
+        return this.attackTiles[opposite(color)].has(king.position); 
+    }
+
+    private _updateAttackTiles() {
+        this._resetAttackTiles();
         for(const piece of this.board.pieces) {
-            if(piece === null || piece.representation() === KING)
+            if(piece === null)
                 continue;
 
-            if(piece.color === Color.White) {
-                for(const move of piece.legalMoves(this)) {
-                    this.whiteAttackTiles.add(move.end);
-                }
-            }
-            else if(piece.color === Color.Black) {
-                for(const move of piece.legalMoves(this)) {
-                    this.blackAttackTiles.add(move.end);
-                }
+            for(const move of piece.legalMoves(this)) {
+                if(move.flags.castle === null)
+                    this.attackTiles[piece.color].add(move.end);
             }
         }
     }
 
-    private updateAttackTilesFor(color: Color) {
+    private _updateAttackTilesFor(color: Color) {
+        this._resetAttackTiles(color);
         for(const piece of this.board.pieces) {
-            if(piece === null || piece.representation() === KING)
+            if(piece === null)
                 continue;
 
             if(color !== piece.color)
                 continue;
 
-            if(piece.color === Color.White) {
-                for(const move of piece.legalMoves(this)) {
-                    this.whiteAttackTiles.add(move.end);
-                }
-            }
-            else if(piece.color === Color.Black) {
-                for(const move of piece.legalMoves(this)) {
-                    this.blackAttackTiles.add(move.end);
-                }
+            for(const move of piece.legalMoves(this)) {
+                if(move.flags.castle === null)
+                    this.attackTiles[piece.color].add(move.end);
             }
         }
     }
 
+    private _resetAttackTiles(color?: Color) {
+        if(color) {
+            this.attackTiles[color].clear();
+            return;
+        }
+        this.attackTiles[Color.White].clear();
+        this.attackTiles[Color.Black].clear();
+    }
 }

@@ -154,4 +154,5 @@ export type Flags = {
     promotion?: Piece | null,
     castle?: CastleTypes | null,
     enpassant?: number | null,
+    firstMove?: boolean | null,
 }

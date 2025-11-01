@@ -26,6 +26,17 @@ class BoardManager {
 
         }
     }
+
+    public static addUndoCallback(callback: () => void) {
+        const undo = document.getElementById("undo");
+        console.log("called?");
+        if(undo === null) {
+            console.log("could not find");
+            throw Error("Could not find undo button");
+        }
+
+        undo.addEventListener("click", callback);
+    }
 }
 
 export default BoardManager;

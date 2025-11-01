@@ -1,4 +1,4 @@
-import { CastleTypes, Color, Direction, Pieces, SQUARES,  } from './constants';
+import { CastleTypes, Color, Direction, Flags, PieceRepresentation, Pieces, SQUARES,  } from './constants';
 import { Move } from './move';
 import { canCastle, isBishopExclusionTile, isKingExclusionTile, isKnightExclusionTile, isPawnExclusionTile, isQueenExclusionTile, isRookExclusionTile, isTileOnBoard } from '../utils/board-utils';
 import Chess from '../engine/chess';
@@ -6,7 +6,7 @@ import Chess from '../engine/chess';
 export abstract class Piece {
     public readonly color: Color;
     public position: number;
-    public abstract representation(): Pieces;
+    public abstract representation(): PieceRepresentation;
     public abstract readonly offsets: number[];
     public firstMove: boolean = true;
 
@@ -33,7 +33,6 @@ export abstract class Piece {
 export class Pawn extends Piece {
     public static readonly PAWN_OFFSETS: number[] = [8, 16, 7, 9];
     public readonly offsets: number[] = Pawn.PAWN_OFFSETS;
-    
 
     constructor(color: Color, position: number, firstMove = true) {
         super(color, position, firstMove);
@@ -41,6 +40,7 @@ export class Pawn extends Piece {
 
     public legalMoves(chess: Chess): Move[] {
         let moves: Move[] = [];
+        let flags: Flags = { firstMove: this.firstMove };
 
         for(let offset of this.offsets) {
             if(isPawnExclusionTile(this.position, offset * this.direction)) 
@@ -61,7 +61,7 @@ export class Pawn extends Piece {
                 if(chess.board.pieces[targetPosition] !== null) 
                     continue;
 
-                let move: Move = new Move(this.position, targetPosition, this);
+                let move: Move = new Move(this.position, targetPosition, this, flags);
                 moves.push(move);
 
             }
@@ -69,13 +69,13 @@ export class Pawn extends Piece {
                 let targetPiece = chess.board.pieces[targetPosition];
 
                 if(targetPiece != null && targetPiece.color != this.color) {
-                    let move: Move = new Move(this.position, targetPosition, this, { captured: targetPiece });
+                    let move: Move = new Move(this.position, targetPosition, this, { ...flags, captured: targetPiece });
                     moves.push(move);
                 }
             }
             else {
                 if(chess.board.pieces[targetPosition] == null) {
-                    let move: Move = new Move(this.position, targetPosition, this);
+                    let move: Move = new Move(this.position, targetPosition, this, flags);
                     moves.push(move);
                 }
             }
@@ -83,7 +83,7 @@ export class Pawn extends Piece {
         return moves;
     }
 
-    public representation(): Pieces {
+    representation(): PieceRepresentation {
         return Pieces.Pawn;
     }
 }
@@ -119,7 +119,7 @@ export class Knight extends Piece {
         return moves;
     }
 
-    public representation(): Pieces {
+    public representation(): PieceRepresentation {
         return Pieces.Knight;
     }
 }
@@ -170,7 +170,7 @@ export class Bishop extends Piece {
         return moves;
     }
 
-    representation() {
+    representation(): PieceRepresentation {
         return Pieces.Bishop;
     }
 }
@@ -183,11 +183,13 @@ export class Rook extends Piece {
         Direction.West
     ];
     public readonly offsets: number[] = Rook.ROOK_OFFSETS;
-    constructor(color: Color, position: number) {
-        super(color, position);
+    constructor(color: Color, position: number, firstMove: boolean = true) {
+        super(color, position, firstMove);
     }
     public legalMoves(chess: Chess): Move[] {
         let moves: Move[] = [];
+        let flags: Flags = { firstMove: this.firstMove };
+
         for(let offset of this.offsets) {
             let targetPosition = this.position;
 
@@ -201,7 +203,7 @@ export class Rook extends Piece {
 
                 const targetPiece: Piece | null = chess.board.pieces[targetPosition];
                 if(targetPiece === null) {
-                    let move: Move = new Move(this.position, targetPosition, this, { captured: targetPiece });
+                    let move: Move = new Move(this.position, targetPosition, this, { ...flags });
                     moves.push(move);
                     continue;
                 }
@@ -209,7 +211,7 @@ export class Rook extends Piece {
                 if(targetPiece.color === this.color) 
                     break;
 
-                let move: Move = new Move(this.position, targetPosition, this, { captured: targetPiece });
+                let move: Move = new Move(this.position, targetPosition, this, { ...flags, captured: targetPiece });
                 moves.push(move);
                 break;
             }
@@ -217,7 +219,7 @@ export class Rook extends Piece {
         return moves;
     }
 
-    representation() {
+    representation(): PieceRepresentation {
         return Pieces.Rook;
     }
 }
@@ -240,6 +242,7 @@ export class Queen extends Piece {
 
     public legalMoves(chess: Chess): Move[] {
         let moves: Move[] = [];
+
         for(let offset of this.offsets) {
             let targetPosition = this.position;
 
@@ -270,7 +273,7 @@ export class Queen extends Piece {
         return moves;
     }
 
-    representation() {
+    representation(): PieceRepresentation {
         return Pieces.Queen;
     }
 }
@@ -287,12 +290,14 @@ export class King extends Piece {
         Direction.NorthWest,
     ];
     public readonly offsets: number[] = King.KING_OFFSETS;
-    constructor(color: Color, position: number) {
-        super(color, position);
+    constructor(color: Color, position: number, firstMove: boolean = true) {
+        super(color, position, firstMove);
     }
 
     public legalMoves(chess: Chess): Move[] {
         let moves: Move[] = [];
+        let flags: Flags = { firstMove: this.firstMove };
+
         for(let offset of this.offsets) {
             if(isKingExclusionTile(this.position, offset))
                 continue;
@@ -303,13 +308,13 @@ export class King extends Piece {
 
             if(canCastle(chess, this.color, CastleTypes.KingSide)) {
                 const tile: number = this.color === Color.White ? SQUARES.g1 : SQUARES.g8;
-                let move: Move = new Move(this.position, tile, this, { castle: CastleTypes.KingSide });
+                let move: Move = new Move(this.position, tile, this, { ...flags, castle: CastleTypes.KingSide });
                 moves.push(move);
             }
 
             if(canCastle(chess, this.color, CastleTypes.QueenSide)) {
                 const tile: number = this.color === Color.White ? SQUARES.c1 : SQUARES.c8;
-                let move: Move = new Move(this.position, tile, this, { castle: CastleTypes.QueenSide });
+                let move: Move = new Move(this.position, tile, this, { ...flags, castle: CastleTypes.QueenSide });
                 moves.push(move);
             }
 
@@ -317,13 +322,13 @@ export class King extends Piece {
             if(targetPiece !== null && targetPiece.color === this.color) 
                 continue;
 
-            let move: Move = new Move(this.position, targetPosition, this, { captured: targetPiece });
+            let move: Move = new Move(this.position, targetPosition, this, { ...flags, captured: targetPiece });
             moves.push(move);
         }
         return moves;
     }
 
-    representation() {
+    representation(): PieceRepresentation {
         return Pieces.King;
     }
 }

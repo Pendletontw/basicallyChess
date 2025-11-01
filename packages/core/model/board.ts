@@ -1,5 +1,6 @@
 import { Bishop, King, Knight, Pawn, Piece, Queen, Rook } from './piece';
-import { BISHOP, BOARD_SIZE, Color, KING, KNIGHT, PAWN, PieceRepresentation, QUEEN, ROOK } from './constants';
+import { BISHOP, BOARD_SIZE, CastleTypes, Color, KING, KNIGHT, PAWN, PieceRepresentation, QUEEN, ROOK, SQUARES } from './constants';
+import { Move } from './move';
 
 export class Board {
     public readonly pieces: (Piece | null)[] = new Array(BOARD_SIZE).fill(null);
@@ -10,10 +11,10 @@ export class Board {
         }
     }
 
-    public place(representation: PieceRepresentation, color: Color, position: number): void {
+    public place(representation: PieceRepresentation, color: Color, position: number, firstMove?: boolean): void {
         switch(representation) {
             case PAWN:
-                this.pieces[position] = new Pawn(color, position);
+                this.pieces[position] = new Pawn(color, position, firstMove);
                 break;
             case KNIGHT:
                 this.pieces[position] = new Knight(color, position);
@@ -22,14 +23,26 @@ export class Board {
                 this.pieces[position] = new Bishop(color, position);
                 break;
             case ROOK:
-                this.pieces[position] = new Rook(color, position);
+                this.pieces[position] = new Rook(color, position, firstMove);
                 break;
             case QUEEN:
                 this.pieces[position] = new Queen(color, position);
                 break;
             case KING:
-                this.pieces[position] = new King(color, position);
+                this.pieces[position] = new King(color, position, firstMove);
         }
+    }
+
+    public remove(position: number) {
+        delete this.pieces[position];
+        this.pieces[position] = null;
+    }
+
+    public move(move: Move): void {
+        if(move.flags.castle) 
+            this._castle(move.piece.color, move.flags.castle);
+
+        this.movePiece(move.start, move.end);
     }
 
     public movePiece(from: number, to: number): void {
@@ -41,6 +54,82 @@ export class Board {
 
         delete this.pieces[from];
         this.pieces[from] = null;
+    }
+
+    public moveAndReplace(from: number, to: number, piece: Piece): void {
+        this.pieces[to] = piece;
+
+        delete this.pieces[from];
+        this.pieces[from] = null;
+    }
+
+    private _castle(color: Color, castle: CastleTypes) {
+        if(castle === CastleTypes.KingSide) {
+            this._castleKingSide(color);
+        }
+
+        if(castle === CastleTypes.QueenSide) {
+            this._castleQueenSide(color);
+        }
+    }
+
+    private _castleKingSide(color: Color) {
+        if(color === Color.White) {
+            this.movePiece(SQUARES.h1, SQUARES.f1);
+        }
+        else {
+            this.movePiece(SQUARES.h8, SQUARES.f8);
+        }
+    }
+
+    private _castleQueenSide(color: Color) {
+        if(color === Color.White) {
+            this.movePiece(SQUARES.a1, SQUARES.d1);
+        }
+        else {
+            this.movePiece(SQUARES.a8, SQUARES.d8);
+        }
+    }
+
+    public undoCastle(color: Color, castle: CastleTypes) {
+        if(castle === CastleTypes.KingSide) {
+            this._undoCastleKingSide(color);
+        }
+
+        if(castle === CastleTypes.QueenSide) {
+            this._undoCastleQueenSide(color);
+        }
+    }
+
+
+    private _undoCastleKingSide(color: Color) {
+        if(color === Color.White) {
+            this.movePiece(SQUARES.f1, SQUARES.h1);
+            const rook = this.pieces[SQUARES.h1];
+            if(rook)
+                rook.firstMove = true;
+        }
+        else {
+            this.movePiece(SQUARES.f8, SQUARES.h8);
+            const rook = this.pieces[SQUARES.h8];
+            if(rook)
+                rook.firstMove = true;
+        }
+    }
+
+    private _undoCastleQueenSide(color: Color) {
+        if(color === Color.White) {
+            this.movePiece(SQUARES.d1, SQUARES.a1);
+            const rook = this.pieces[SQUARES.a1];
+            if(rook)
+                rook.firstMove = true;
+        }
+        else {
+            this.movePiece(SQUARES.d8, SQUARES.a8);
+            const rook = this.pieces[SQUARES.a8];
+            if(rook)
+                rook.firstMove = true;
+        }
     }
 
     public toString(): string {

@@ -1,6 +1,7 @@
 import Chess from '../engine/chess';
 import { Board } from '../model/board';
 import { BOARD_SIZE, FILES, Rank, File, KnightDirection, Direction, Color, CastleTypes, CastleSquares, CastleRookSquare, CastleKingSquare } from '../model/constants';
+import { Move } from '../model/move';
 import { Piece } from '../model/piece';
 
 export function isTileOnBoard(position: number): boolean {
@@ -16,9 +17,7 @@ export function isTileOccupied(board: Board, position: number): boolean {
 }
 
 export function isTileAttacked(chess: Chess, position: number, color: Color) {
-    if(color === Color.White) 
-        return chess.blackAttackTiles.has(position);
-    return chess.whiteAttackTiles.has(position);
+    return chess.attackTiles[opposite(color)].has(position);
 }
 
 export function areTilesOccupied(board: Board, tiles: number[]) {
@@ -162,4 +161,8 @@ export function getFile(position: number): File {
 
 export function toAlgebraicNotation(position: number) {
     return getFile(position) + getRank(position).toString();
+}
+
+export function opposite(color: Color) {
+    return color === Color.White ? Color.Black : Color.White;
 }
