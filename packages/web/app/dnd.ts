@@ -49,24 +49,13 @@ class ChessboardDragController {
         this.chessboard.addEventListener('mousedown', (event: MouseEvent) => {
             const target = event.target as ChessPiece;
 
-            console.log("handling mouse down");
-            if(this.twoClickActive) {
-                this.handleMouseUp(event);
-                if(this.notLegal) {
-                    console.log("now in here?");
-                    this.startDrag(event, target);
-                    this.notLegal = false;
-                }
-                this.twoClickActive = false;
-            }
-            else if (target && target.tagName === 'IMG') {
+            if (target && target.tagName === 'IMG') {
                 this.startDrag(event, target);
             }
         });
     }
 
     private startDrag(event: MouseEvent, piece: ChessPiece): void {
-        console.log("STARTING DRAG");
         this.resetDragState();
         piece.ondragstart = () => false;
 
@@ -81,7 +70,7 @@ class ChessboardDragController {
 
         document.body.appendChild(this.draggedPiece);
 
-        //this.disablePointerEventsForAllOtherPieces();
+        this.disablePointerEventsForAllOtherPieces();
         this.moveAt(event.pageX, event.pageY);
     }
 
