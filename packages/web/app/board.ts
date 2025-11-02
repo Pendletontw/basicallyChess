@@ -1,4 +1,5 @@
 import { Board } from "@trent/core/model/board";
+import { Move } from "@trent/core/model/move";
 import { Piece } from "@trent/core/model/piece";
 
 class BoardManager {
@@ -16,7 +17,7 @@ class BoardManager {
             }
 
             const pieceImage = document.createElement('img');
-            pieceImage.src = `./assets/pieces/standard/${piece.color}/${piece.representation()}.png`;
+            pieceImage.src = `./assets/pieces/chessdotcom/${piece.color}/${piece.representation()}.png`;
             pieceImage.draggable = true;
             pieceImage.setAttribute('data-color', piece.color);
 
@@ -24,6 +25,22 @@ class BoardManager {
             square.innerHTML = '';
             square.appendChild(pieceImage);
 
+        }
+    }
+
+    public static highlightMove(move: Move): void {
+        const chessboard = document.getElementById('board');
+        if(chessboard === null)
+            throw Error("Cannot highlight move, board is null");
+
+        chessboard.children[move.start].classList.add('moved');
+        chessboard.children[move.end].classList.add('moved');
+    }
+
+    public static unhighlightLastMoves(): void {
+        const moved = document.querySelectorAll(".moved");
+        for(let move of moved) {
+            move.classList.remove("moved");
         }
     }
 

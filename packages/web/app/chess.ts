@@ -24,8 +24,7 @@ class ChessManager {
             foundError = true;
         }
         finally {
-            BoardManager.populateBoardFromChess(this.chess.board);
-            UIManager.updateTurn(this.chess.turn);
+            this.updateBoard();
         }
         return foundError;
     }
@@ -35,9 +34,18 @@ class ChessManager {
             this.chess.undo();
         } catch (error) { }
         finally {
-            BoardManager.populateBoardFromChess(this.chess.board);
-            UIManager.updateTurn(this.chess.turn);
+            this.updateBoard();
         }
+    }
+
+    public updateBoard() {
+        BoardManager.populateBoardFromChess(this.chess.board);
+        BoardManager.unhighlightLastMoves();
+        if(this.chess.history.length !== 0) {
+            const last = this.chess.history.length - 1;
+            BoardManager.highlightMove(this.chess.history[last]);
+        }
+        UIManager.updateTurn(this.chess.turn);
     }
 
     public getTurn(): Color {

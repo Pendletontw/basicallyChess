@@ -120,10 +120,10 @@ export default class Chess {
         return false;
     }
 
-    public undo(switchTurns: boolean = true) {
+    public undo(switchTurns: boolean = true): Move | undefined {
         const move: Move | undefined = this.history.pop();
         if(move === undefined)
-            return;
+            return move;
 
         if(move.flags.promotion) {
             const piece = move.flags.promotion;
@@ -138,7 +138,7 @@ export default class Chess {
             this._updateAttackTiles();
             if(switchTurns)
                 this.switchTurns();
-            return;
+            return move;
         }
 
         if(move.flags.castle) {
@@ -164,6 +164,8 @@ export default class Chess {
 
         if(switchTurns)
             this.switchTurns();
+
+        return move;
     }
 
     public getLegalMovesFor(position: number): Move[] { 

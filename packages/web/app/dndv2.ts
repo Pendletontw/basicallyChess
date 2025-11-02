@@ -108,6 +108,7 @@ class ChessboardDragController {
         const position: number = this._findPositionOfElement(target);
         const error = this._attemptToMakeMove(position);
         if(error) {
+            this.dragged.piece.remove();
             this._resetDragPieceStyles();
         } else {
             this._resetDragState();
@@ -181,6 +182,7 @@ class ChessboardDragController {
     private _attemptToMakeMove(position: number): boolean {
         if(this.dragged.from === null)
             return false;
+
         return this.chessManager.makeMove(this.dragged.from, position);
     }
 
@@ -211,7 +213,6 @@ class ChessboardDragController {
     private _resetDragPieceStyles() {
         if (this.dragged.piece) {
             this.dragged.piece.style.cssText = '';
-            this.dragged.square?.classList.remove("active");
             this.currentSquare?.classList.remove("drag-over");
         }
     }
@@ -220,6 +221,7 @@ class ChessboardDragController {
         if (this.dragged.piece) {
             this._resetDragPieceStyles();
             this._unhighlightTargetSquares(this.dragged.legals);
+            this.dragged.square?.classList.remove("active");
             if(removePiece)
                 this.dragged.piece.remove();
             this.dragged = structuredClone(DRAGGED_DEFAULT);

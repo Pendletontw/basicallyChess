@@ -107,3 +107,36 @@ body {
     border-radius: 50%;
 }
 
+.square:not(.active).moved::before {
+    content: '';
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1;
+    background: rgba(255, 255, 0, .5);
+    position: absolute;
+    z-index: 1;
+}
+
+#options {
+    background: rgba(0, 0, 0, .5);
+    margin-block: 1rem;
+    border-radius: 5px;
+}
+
+#undo {
+    display: flex;
+    text-align: center;
+    color: white;
+    padding: .5rem 1rem;
+    background: var(--background);
+    border: none;
+    outline: none;
+    margin: 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#undo:hover {
+    opacity: .7;
+}
+
