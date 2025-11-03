@@ -149,10 +149,16 @@ export const CastleRookSquare = {
     }
 }
 
+export enum PawnJump {
+    Short,
+    Long,
+}
+
 export type Flags = {
     captured?: Piece | null,
     promotion?: Piece | null,
     castle?: CastleTypes | null,
     enpassant?: number | null,
     firstMove?: boolean | null,
+    jump?: PawnJump | null,
 }

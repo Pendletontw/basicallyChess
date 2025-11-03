@@ -1,7 +1,6 @@
 import Chess from '../engine/chess';
 import { Board } from '../model/board';
 import { BOARD_SIZE, FILES, Rank, File, KnightDirection, Direction, Color, CastleTypes, CastleSquares, CastleRookSquare, CastleKingSquare } from '../model/constants';
-import { Move } from '../model/move';
 import { Piece } from '../model/piece';
 
 export function isTileOnBoard(position: number): boolean {

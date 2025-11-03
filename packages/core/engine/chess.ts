@@ -99,6 +99,11 @@ export default class Chess {
                 if(piece.representation() === KING) 
                     this.kings[piece.color] = to;
 
+                this.nonpassant = move.flags.enpassant || null;
+
+                if(move.flags.captured) {
+                    this._remove(move.flags.captured.position);
+                }
                 this.board.move(move);
                 this._updateAttackTiles();
                 
@@ -132,12 +137,17 @@ export default class Chess {
 
         if(move.flags.captured) {
             this._place(move.piece.representation(), move.piece.color, move.start, move.piece.firstMove);
-            this._remove(move.piece.position);
+            this._remove(move.end);
             const piece: Piece = move.flags.captured;
             this._place(piece.representation(), piece.color, piece.position, piece.firstMove);
             this._updateAttackTiles();
             if(switchTurns)
                 this.switchTurns();
+
+            if(this.history.length !== 0) {
+                this.nonpassant = this.history[this.history.length - 1].flags.enpassant || null;
+            }
+
             return move;
         }
 
@@ -204,6 +214,8 @@ export default class Chess {
                 continue;
 
             for(const move of piece.legalMoves(this)) {
+                if(move.flags.jump) 
+                    continue;
                 if(move.flags.castle === null)
                     this.attackTiles[piece.color].add(move.end);
             }
@@ -220,6 +232,8 @@ export default class Chess {
                 continue;
 
             for(const move of piece.legalMoves(this)) {
+                if(move.flags.jump)
+                    continue;
                 if(move.flags.castle === null)
                     this.attackTiles[piece.color].add(move.end);
             }

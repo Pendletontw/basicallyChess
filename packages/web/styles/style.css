@@ -97,7 +97,7 @@ body {
     border-radius: 50%;
 }
 
-.target:not(:empty)::after{
+.target:not(:empty)::before{
     content: '';
     width: 100%;
     height: 100%;
@@ -107,7 +107,7 @@ body {
     border-radius: 50%;
 }
 
-.square:not(.active).moved::before {
+.square:not(.active).moved::after {
     content: '';
     width: 100%;
     height: 100%;

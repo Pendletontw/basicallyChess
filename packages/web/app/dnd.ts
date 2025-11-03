@@ -127,7 +127,6 @@ class ChessboardDragController {
     }
 
     private handleMouseUp = (event: MouseEvent): void => {
-        console.log("HANDLING MOUSE UP");
         if (!this.draggedPiece) {
             return;
         }
@@ -143,22 +142,17 @@ class ChessboardDragController {
 
         this.handleDrop(elementUnderCursor);
         if(!this.twoClickActive) {
-            console.log("drag state reset");
             this.resetDragState();
         } else {
-            console.log("resetting drag piece styles");
             this.resetDragPieceStyles(); 
         }
     }
 
     private handleDrop(elementUnderCursor: Element | null) {
-        console.log(elementUnderCursor);
         if(elementUnderCursor?.parentElement?.classList.contains("square")) {
             elementUnderCursor = elementUnderCursor.parentElement;
         }
-        console.log("HANDLING DROP");
         if(this.draggedPiece && elementUnderCursor && this.originalSquare === elementUnderCursor) {
-            console.log("in the first");
             elementUnderCursor.append(this.draggedPiece);
             this.twoClickActive = !this.twoClickActive;
             this.dragging = !this.twoClickActive;
@@ -166,9 +160,7 @@ class ChessboardDragController {
         }
 
         if(!this.isValidDropLocation(elementUnderCursor) && this.draggedPiece && this.originalSquare) {
-            console.log("in the second");
             if(this.dragging) {
-                console.log("in the second nested", this.isValidDropLocation(elementUnderCursor), this.draggedPiece, this.originalSquare);
                 this.originalSquare.append(this.draggedPiece);
                 this.twoClickActive = true;
                 this.dragging = false;
@@ -183,7 +175,6 @@ class ChessboardDragController {
             this.targetPosition = this.getPositionOfTile(elementUnderCursor);
             if(this.targetPosition) {
                 const result = this.chessManager.makeMove(this.originalPosition, this.targetPosition)
-                console.log("made move with result: ", result);
                 this.notLegal = result;
                 if(this.dragging)
                     this.twoClickActive = result;
@@ -221,13 +212,11 @@ class ChessboardDragController {
 
     private isValidDropLocation(elementUnderCursor: Element | null): elementUnderCursor is ChessSquare {
         if (!elementUnderCursor) {
-            console.log("not an element under cursor");
             return false;
         }
 
         if (!elementUnderCursor.classList.contains('square')) {
 
-            console.log("isn't a square");
             return false;
         }
 

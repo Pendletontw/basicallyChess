@@ -1,6 +1,6 @@
-import { CastleTypes, Color, Direction, Flags, PieceRepresentation, Pieces, SQUARES,  } from './constants';
+import { CastleTypes, Color, Direction, Flags, PawnJump, PieceRepresentation, Pieces, Rank, SQUARES,  } from './constants';
 import { Move } from './move';
-import { canCastle, isBishopExclusionTile, isKingExclusionTile, isKnightExclusionTile, isPawnExclusionTile, isQueenExclusionTile, isRookExclusionTile, isTileOnBoard } from '../utils/board-utils';
+import { canCastle, getRank, isBishopExclusionTile, isKingExclusionTile, isKnightExclusionTile, isPawnExclusionTile, isQueenExclusionTile, isRookExclusionTile, isTileOnBoard } from '../utils/board-utils';
 import Chess from '../engine/chess';
 
 export abstract class Piece {
@@ -61,7 +61,10 @@ export class Pawn extends Piece {
                 if(chess.board.pieces[targetPosition] !== null) 
                     continue;
 
-                let move: Move = new Move(this.position, targetPosition, this, flags);
+                let move: Move = new Move(this.position, 
+                                          targetPosition, 
+                                          this,
+                                          { ...flags, jump: PawnJump.Long, enpassant: betweenTile });
                 moves.push(move);
 
             }
@@ -72,10 +75,28 @@ export class Pawn extends Piece {
                     let move: Move = new Move(this.position, targetPosition, this, { ...flags, captured: targetPiece });
                     moves.push(move);
                 }
+                else if(chess.nonpassant === targetPosition) {
+                    let piece: Piece | null;
+                    if(getRank(targetPosition) === Rank.Six) {
+                        piece = chess.board.pieces[targetPosition - 8];
+
+                    } else {
+                        piece = chess.board.pieces[targetPosition + 8];
+                    }
+
+                    if(piece === null) 
+                        continue;
+
+                    if(piece.color === this.color)
+                        continue;
+
+                    let move: Move = new Move(this.position, targetPosition, this, { ...flags, captured: piece });
+                    moves.push(move);
+                }
             }
             else {
                 if(chess.board.pieces[targetPosition] == null) {
-                    let move: Move = new Move(this.position, targetPosition, this, flags);
+                    let move: Move = new Move(this.position, targetPosition, this, { ...flags, jump: PawnJump.Short });
                     moves.push(move);
                 }
             }
