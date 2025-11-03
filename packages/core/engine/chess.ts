@@ -188,6 +188,9 @@ export default class Chess {
     }
 
     private _isLegalMove(move: Move): boolean {
+        if(move.flags.castle && this._isKingChecked(this.turn)) 
+            return false;
+        
         this.history.push(move);
         if(move.piece.representation() === KING) {
             this.kings[move.piece.color] = move.end;
