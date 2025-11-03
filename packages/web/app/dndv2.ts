@@ -28,15 +28,15 @@ const DRAGGED_DEFAULT: DraggedPieceInfo = {
 };
 
 class ChessboardDragController {
- 
     private dragged = structuredClone(DRAGGED_DEFAULT);     
     private currentSquare: ChessSquare | null = null;
     private chessboard: Chessboard;
-    private chessManager: ChessManager = chessManager;
+    private chessManager: ChessManager;
     private dragging = false;
 
-    constructor(boardElementId: string) {
-        const board = document.getElementById(boardElementId);
+    constructor(chessManager: ChessManager) {
+        const board = document.getElementById('board');
+        this.chessManager = chessManager;
         this.chessboard = board || this._generateNewBoard();
         this._addGlobalEventListeners();
         this._addPieceDragStartListener();
@@ -276,8 +276,10 @@ class ChessboardDragController {
             this.dragged.square.append(this.dragged.piece);
         }
     }
+
+    public deactivatePiece() {
+        this._resetDragState();
+    }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    new ChessboardDragController('board');
-});
+export default ChessboardDragController;
