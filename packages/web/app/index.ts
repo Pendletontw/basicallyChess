@@ -10,4 +10,8 @@ undo?.addEventListener("click", () => {
     chessboardDragController.deactivatePiece();
 });
 
+const engine = document.getElementById("engine");
+engine?.addEventListener("click", () => {
+    chessManager.makeEngineMove();
+});
 export default chessManager;

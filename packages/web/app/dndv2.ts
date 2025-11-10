@@ -236,8 +236,9 @@ class ChessboardDragController {
 
         const error = this.chessManager.makeMove(this.dragged.from, position);
         this.pending = false;
-        if(error) 
+        if(error)  {
             return MoveStatus.INVALID;
+        }
         return MoveStatus.SUCCESS;
     }
 

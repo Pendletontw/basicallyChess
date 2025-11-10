@@ -1,8 +1,10 @@
 import { Board } from "../model/board";
-import { Castles, Color, DECIMAL, DEFAULT_POSITION, KING, Kings, PieceRepresentation, Pieces, PromotionPiece, Square, SQUARES } from "../model/constants";
+import { Castles, CastleTypes, Color, DECIMAL, DEFAULT_POSITION, KING, Kings, PieceRepresentation, Pieces, PromotionPiece, ROOK, Square, SQUARES } from "../model/constants";
 import { Move } from "../model/move";
 import { Piece } from "../model/piece";
 import { isAPromotionSquare, opposite } from "../utils/board-utils";
+import { MAX_SEARCH_DEPTH } from "./evaluation";
+import { findBestMove } from "./minmax";
 
 export default class Chess {
     public board: Board = new Board();
@@ -10,6 +12,10 @@ export default class Chess {
     public castles: Castles = { 
         "W": { "queen": false, "king": false}, 
         "B": { "queen": false, "king": false} 
+    };
+    public castled: { [key: string]: boolean } = {
+        "W": false,
+        "B": false,
     };
 
     public kings: Kings = {
@@ -84,6 +90,48 @@ export default class Chess {
         this.turn = opposite(this.turn);
     }
 
+    public async makeEngineMove(depth: number = MAX_SEARCH_DEPTH): Promise<Move | null> {
+        const bestMove = findBestMove(this, depth);
+        
+        if (bestMove) {
+            this.moveUsingMove(bestMove);
+            return bestMove;
+        } else {
+            return null;
+        }
+    }
+
+    public moveUsingMove(move: Move) {
+        this.history.push(move);
+
+        if(move.piece.representation() === KING) 
+            this.kings[move.piece.color] = move.end;
+
+        this.nonpassant = move.flags.enpassant || null;
+
+        if(move.flags.captured) {
+            this._remove(move.flags.captured.position);
+        }
+
+        if(move.flags.castle) {
+            this.castled[this.turn] = true;
+        }
+
+        this.board.move(move);
+
+        this._updateCastleAvailability();
+
+        if(move.flags.promotion) {
+            this._remove(move.end);
+            this._place(move.flags.promotion as PieceRepresentation, move.piece.color, move.end, false);
+        }
+        this._updateAttackTiles();
+        this.moves += 1;
+
+        this.switchTurns();
+        return;
+    }
+
     public moveUsingPosition(from: number, to: number, promotion?: PromotionPiece) {
         let piece: Piece | null = this.board.pieces[from];
         if(piece === null) 
@@ -96,27 +144,7 @@ export default class Chess {
             if(move.start === from && move.end === to) {
                 if(promotion && move.flags.promotion !== promotion) 
                     continue;
-
-                this.history.push(move);
-
-                if(piece.representation() === KING) 
-                    this.kings[piece.color] = to;
-
-                this.nonpassant = move.flags.enpassant || null;
-
-                if(move.flags.captured) {
-                    this._remove(move.flags.captured.position);
-                }
-
-                this.board.move(move);
-
-                if(move.flags.promotion) {
-                    this._remove(move.end);
-                    this._place(move.flags.promotion as PieceRepresentation, move.piece.color, move.end, false);
-                }
-                this._updateAttackTiles();
-                
-                this.switchTurns();
+                this.moveUsingMove(move);
                 return;
             }
         }
@@ -130,8 +158,41 @@ export default class Chess {
         this.moveUsingPosition(current, target, promotion);
     }
 
+    private _updateCastleAvailability() {
+        const bqsrook: Piece | null = this.board.pieces[SQUARES.a8]; 
+        const bksrook: Piece | null = this.board.pieces[SQUARES.h8]; 
+        const wqsrook: Piece | null = this.board.pieces[SQUARES.a1]; 
+        const wksrook: Piece | null = this.board.pieces[SQUARES.h1]; 
+        const wking: Piece | null = this.board.pieces[SQUARES.e1];
+        const bking: Piece | null = this.board.pieces[SQUARES.e8];
+        this.castles[Color.White].king = true;
+        this.castles[Color.White].queen = true;
+        this.castles[Color.Black].king = true;
+        this.castles[Color.Black].queen = true;
+        if(!wking || !wking.firstMove) {
+            this.castles[Color.White].king = false;
+            this.castles[Color.White].queen = false;
+        }
+        if(!wqsrook || !wqsrook.firstMove) {
+            this.castles[Color.White].queen = false;
+        }
+        if(!wksrook || !wksrook.firstMove) {
+            this.castles[Color.White].king = false;
+        }
+        if(!bking || !bking.firstMove) {
+            this.castles[Color.Black].king = false;
+            this.castles[Color.Black].queen = false;
+        }
+        if(!bqsrook || !bqsrook.firstMove) {
+            this.castles[Color.Black].queen = false;
+        }
+        if(!bksrook || !bksrook.firstMove) {
+            this.castles[Color.Black].king = false;
+        }
+    }
+
     public isCheckmate(): boolean {
-        return false;
+        return this.getAllLegalMoves(this.turn).length === 0;
     }
 
     public isPromotionSquare(position: number) {
@@ -147,12 +208,20 @@ export default class Chess {
             this._place(Pieces.Pawn, move.piece.color, move.end, false);
         }
 
+        if(move.flags.firstMove) {
+            move.piece.firstMove = true;
+        }
+
         if(move.flags.captured) {
             this._place(move.piece.representation(), move.piece.color, move.start, move.piece.firstMove);
             this._remove(move.end);
             const piece: Piece = move.flags.captured;
             this._place(piece.representation(), piece.color, piece.position, piece.firstMove);
             this._updateAttackTiles();
+            this._updateCastleAvailability();
+
+            this.moves -= 1;
+
             if(switchTurns)
                 this.switchTurns();
 
@@ -164,11 +233,7 @@ export default class Chess {
         }
 
         if(move.flags.castle) {
-            this.board.undoCastle(move.piece.color, move.flags.castle);
-        }
-
-        if(move.flags.firstMove) {
-            move.piece.firstMove = true;
+            this._handleUndoCastle(move);
         }
 
         if(move.piece.representation() === KING) {
@@ -183,11 +248,25 @@ export default class Chess {
         );
         this._remove(move.end);
         this._updateAttackTiles();
+        this._updateCastleAvailability();
+
+        this.moves -= 1;
 
         if(switchTurns)
             this.switchTurns();
 
         return move;
+    }
+
+    public getAllLegalMoves(color: Color): Move[] {
+        let moves: Move[] = [];
+        for(const piece of this.board.pieces) {
+            if(piece === null || piece.color !== color) {
+                continue;
+            }
+            moves.push(...this.getLegalMovesFor(piece.position));
+        }
+        return moves;
     }
 
     public getLegalMovesFor(position: number): Move[] { 
@@ -197,6 +276,32 @@ export default class Chess {
 
         const moves = piece.legalMoves(this).filter((move) => this._isLegalMove(move)); 
         return moves;
+    }
+
+    private _handleUndoCastle(move: Move) {
+        if(move.piece.color === Color.White) {
+            move.piece.firstMove = true;
+            if(move.flags.castle === CastleTypes.KingSide) {
+                this._remove(SQUARES.f1);
+                this._place(ROOK, Color.White, SQUARES.h1);
+                this.castles[Color.White].king = true;
+            } else {
+                this._remove(SQUARES.d1);
+                this._place(ROOK, Color.White, SQUARES.a1);
+                this.castles[Color.White].queen = true;
+            }
+        } else {
+            if(move.flags.castle === CastleTypes.KingSide) {
+                this._remove(SQUARES.f8);
+                this._place(ROOK, Color.Black, SQUARES.h8);
+                this.castles[Color.Black].king = true;
+            } else {
+                this._remove(SQUARES.d8);
+                this._place(ROOK, Color.Black, SQUARES.a8);
+                this.castles[Color.Black].queen = true;
+            }
+        }
+        this.castled[move.piece.color] = false;
     }
 
     private _isLegalMove(move: Move): boolean {

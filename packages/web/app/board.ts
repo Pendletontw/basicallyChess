@@ -45,6 +45,11 @@ class BoardManager {
         }
     }
 
+    public static removeFloatingUI(): void {
+        const promotion: HTMLElement | null = document.getElementById("promotion");
+        promotion?.remove();
+    }
+
     public static addUndoCallback(callback: () => void) {
         const undo = document.getElementById("undo");
         if(undo === null) {

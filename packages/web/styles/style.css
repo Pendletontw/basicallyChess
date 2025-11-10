@@ -121,9 +121,10 @@ body {
     background: rgba(0, 0, 0, .5);
     margin-block: 1rem;
     border-radius: 5px;
+    display: flex;
 }
 
-#undo {
+#options > button {
     display: flex;
     text-align: center;
     color: white;
@@ -136,7 +137,7 @@ body {
     cursor: pointer;
 }
 
-#undo:hover {
+#options > button:hover {
     opacity: .7;
 }
 

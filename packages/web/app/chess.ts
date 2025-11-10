@@ -29,6 +29,11 @@ class ChessManager {
         return foundError;
     }
 
+    public async makeEngineMove() {
+        await this.chess.makeEngineMove(3);
+        this.updateBoard();
+    }
+
     public undo(): void {
         try {
             this.chess.undo();
@@ -41,6 +46,7 @@ class ChessManager {
     public updateBoard() {
         BoardManager.populateBoardFromChess(this.chess.board);
         BoardManager.unhighlightLastMoves();
+        BoardManager.removeFloatingUI();
         if(this.chess.history.length !== 0) {
             const last = this.chess.history.length - 1;
             BoardManager.highlightMove(this.chess.history[last]);
