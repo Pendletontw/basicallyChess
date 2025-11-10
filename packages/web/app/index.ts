@@ -8,7 +8,6 @@ const undo = document.getElementById("undo");
 undo?.addEventListener("click", () => {
     chessManager.undo();
     chessboardDragController.deactivatePiece();
-
 });
 
 export default chessManager;

@@ -154,9 +154,11 @@ export enum PawnJump {
     Long,
 }
 
+export type PromotionPiece = Pieces.Queen | Pieces.Knight | Pieces.Rook | Pieces.Bishop;
+
 export type Flags = {
     captured?: Piece | null,
-    promotion?: Piece | null,
+    promotion?: PromotionPiece | null,
     castle?: CastleTypes | null,
     enpassant?: number | null,
     firstMove?: boolean | null,

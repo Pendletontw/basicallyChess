@@ -1,4 +1,4 @@
-import { CastleTypes, Color, Direction, Flags, PawnJump, PieceRepresentation, Pieces, Rank, SQUARES,  } from './constants';
+import { CastleTypes, Color, Direction, Flags, PawnJump, PieceRepresentation, Pieces, PromotionPiece, Rank, SQUARES,  } from './constants';
 import { Move } from './move';
 import { canCastle, getRank, isBishopExclusionTile, isKingExclusionTile, isKnightExclusionTile, isPawnExclusionTile, isQueenExclusionTile, isRookExclusionTile, isTileOnBoard } from '../utils/board-utils';
 import Chess from '../engine/chess';
@@ -33,6 +33,7 @@ export abstract class Piece {
 export class Pawn extends Piece {
     public static readonly PAWN_OFFSETS: number[] = [8, 16, 7, 9];
     public readonly offsets: number[] = Pawn.PAWN_OFFSETS;
+    private readonly promotions: PromotionPiece[] = [Pieces.Queen, Pieces.Rook, Pieces.Bishop, Pieces.Knight];
 
     constructor(color: Color, position: number, firstMove = true) {
         super(color, position, firstMove);
@@ -72,7 +73,17 @@ export class Pawn extends Piece {
                 let targetPiece = chess.board.pieces[targetPosition];
 
                 if(targetPiece != null && targetPiece.color != this.color) {
-                    let move: Move = new Move(this.position, targetPosition, this, { ...flags, captured: targetPiece });
+                    const newFlags = { ...flags, captured: targetPiece };
+                    const rank = getRank(targetPosition);
+                    if(rank === Rank.Eight && this.color === Color.White || 
+                       rank === Rank.One && this.color === Color.Black) {
+                        for(const promotion of this.promotions) {
+                            let move: Move = new Move(this.position, targetPosition, this, { ...newFlags, promotion: promotion });
+                            moves.push(move);
+                        }
+                        continue;
+                    }
+                    let move: Move = new Move(this.position, targetPosition, this, newFlags);
                     moves.push(move);
                 }
                 else if(chess.nonpassant === targetPosition) {
@@ -96,7 +107,17 @@ export class Pawn extends Piece {
             }
             else {
                 if(chess.board.pieces[targetPosition] == null) {
-                    let move: Move = new Move(this.position, targetPosition, this, { ...flags, jump: PawnJump.Short });
+                    const newFlags = { ...flags, jump: PawnJump.Short };
+                    const rank = getRank(targetPosition);
+                    if(rank === Rank.Eight && this.color === Color.White || 
+                       rank === Rank.One && this.color === Color.Black) {
+                        for(const promotion of this.promotions) {
+                            let move: Move = new Move(this.position, targetPosition, this, { ...newFlags, promotion: promotion });
+                            moves.push(move);
+                        }
+                        continue;
+                    }
+                    let move: Move = new Move(this.position, targetPosition, this, newFlags);
                     moves.push(move);
                 }
             }

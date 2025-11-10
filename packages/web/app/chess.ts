@@ -1,7 +1,7 @@
 import Chess from "@trent/core";
 import BoardManager from "./board";
 import { Move } from "@trent/core/model/move";
-import { Color } from "@trent/core/model/constants";
+import { Color, PromotionPiece } from "@trent/core/model/constants";
 import UIManager from "./ui";
 
 class ChessManager {
@@ -16,10 +16,10 @@ class ChessManager {
         return this.chess.getLegalMovesFor(position);
     }
 
-    public makeMove(from: number, to: number): boolean {
+    public makeMove(from: number, to: number, promotion?: string): boolean {
         let foundError: boolean = false;
         try {
-            this.chess.moveUsingPosition(from, to);
+            this.chess.moveUsingPosition(from, to, promotion as PromotionPiece);
         } catch (error) { 
             foundError = true;
         }
@@ -46,6 +46,14 @@ class ChessManager {
             BoardManager.highlightMove(this.chess.history[last]);
         }
         UIManager.updateTurn(this.chess.turn);
+    }
+
+    public isPromotionSquare(position: number) {
+        return this.chess.isPromotionSquare(position);
+    }
+
+    public promptPromotion(position: number) {
+        BoardManager.promptPromotionChoice(position, this.chess.turn);
     }
 
     public getTurn(): Color {

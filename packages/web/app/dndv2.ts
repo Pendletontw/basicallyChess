@@ -1,7 +1,7 @@
 import { Move } from "@trent/core/model/move";
-import chessManager from "./index";
 import { Color } from "@trent/core/model/constants";
 import ChessManager from "./chess";
+import BoardManager from "./board";
 
 type ChessPiece = HTMLImageElement;
 type ChessSquare = HTMLDivElement;
@@ -27,12 +27,19 @@ const DRAGGED_DEFAULT: DraggedPieceInfo = {
     legals: [],
 };
 
+enum MoveStatus {
+    INVALID,
+    SUCCESS,
+    CANCELLED,
+}
+
 class ChessboardDragController {
     private dragged = structuredClone(DRAGGED_DEFAULT);     
     private currentSquare: ChessSquare | null = null;
     private chessboard: Chessboard;
     private chessManager: ChessManager;
     private dragging = false;
+    private pending = false;
 
     constructor(chessManager: ChessManager) {
         const board = document.getElementById('board');
@@ -53,7 +60,7 @@ class ChessboardDragController {
 
     private _addGlobalEventListeners(): void {
         document.addEventListener('mousemove', this._handleMouseMove);
-        document.addEventListener('mouseup', (event) => this._handleDrop(event));
+        document.addEventListener('mouseup', async (event) => await this._handleDrop(event));
         document.addEventListener('mousedown', (event) => {
             const IS_RIGHT_CLICK = event.button === 2;
             if(IS_RIGHT_CLICK && this.dragging) {
@@ -64,7 +71,7 @@ class ChessboardDragController {
     }
 
     private _addPieceDragStartListener(): void {
-        this.chessboard.addEventListener('mousedown', (event) => this._handleAttemptedSelect(event));
+        this.chessboard.addEventListener('mousedown', async (event) => await this._handleAttemptedSelect(event));
         this.chessboard.addEventListener('contextmenu', (e) => { e.preventDefault(); });
     }
 
@@ -75,7 +82,7 @@ class ChessboardDragController {
         }
     }
 
-    private _handleAttemptedSelect(event: MouseEvent) {
+    private async _handleAttemptedSelect(event: MouseEvent) {
         const IS_RIGHT_CLICK = event.button === 2;
         if(IS_RIGHT_CLICK && this.dragging) {
             this._returnPieceToOriginalSquare();
@@ -83,13 +90,16 @@ class ChessboardDragController {
             return;
         }
 
+        if(this.pending) 
+            return;
+
         const target: HTMLElement = event.target as HTMLElement;
         const position: number = this._findPositionOfElement(target);
 
         if(this.dragged.piece) {
-            const error = this._attemptToMakeMove(position);
-            this._resetDragState();
-            if(error) {
+            const status: MoveStatus = await this._attemptToMakeMove(position);
+            this._resetDragState(false);
+            if(status === MoveStatus.INVALID) {
                 const newTarget = this._getTile(position);
                 this._setActive(newTarget, event);
             }
@@ -99,19 +109,22 @@ class ChessboardDragController {
         }
     }
 
-    private _handleDrop(event: MouseEvent) {
-        if(this.dragged.piece === null) 
+    private async _handleDrop(event: MouseEvent) {
+        if(this.dragged.piece === null || this.pending) 
             return;
 
         this.dragging = false;
         const target: HTMLElement = event.target as HTMLElement;
         const position: number = this._findPositionOfElement(target);
-        const error = this._attemptToMakeMove(position);
-        if(error) {
-            this.dragged.piece.remove();
+        const status: MoveStatus = await this._attemptToMakeMove(position);
+        if(status === MoveStatus.INVALID) {
+            this._resetPiece();
             this._resetDragPieceStyles();
-        } else {
+        } else if(status === MoveStatus.SUCCESS) {
             this._resetDragState();
+        } else if(status === MoveStatus.CANCELLED) {
+            this._returnPieceToOriginalSquare();
+            this._resetDragState(false);
         }
     }
 
@@ -179,11 +192,53 @@ class ChessboardDragController {
         this.chessboard.style.cursor = 'grabbing';
     }
 
-    private _attemptToMakeMove(position: number): boolean {
-        if(this.dragged.from === null)
-            return false;
+    private async _attemptToMakeMove(position: number): Promise<MoveStatus> {
+        this.pending = true;
+        if (this.dragged.from === null) {
+            this.pending = false;
+            return MoveStatus.INVALID;
+        }
 
-        return this.chessManager.makeMove(this.dragged.from, position);
+        const move: Move | null = this._findMoveFromPosition(position);
+        if(!move) {
+            this.pending = false;
+            return MoveStatus.INVALID;
+        }
+
+        if(move.flags.promotion && this.chessManager.getTurn() === move.piece.color) {
+            try {
+                this._setPieceVisibility(false);
+                this.chessboard.style.cursor = "default";
+                const choice: string = await BoardManager.promptPromotionChoice(position, this.chessManager.getTurn());
+                this._setPieceVisibility(true);
+                if (this.dragged.from === null) {
+                    this.pending = false;
+                    return MoveStatus.INVALID; 
+                }
+
+                const error = this.chessManager.makeMove(this.dragged.from, position, choice);
+                this.pending = false;
+                if(error) 
+                    return MoveStatus.INVALID;
+                return MoveStatus.SUCCESS;
+
+
+            } catch (error) {
+                this.pending = false;
+                if(error instanceof Error && error.message === 'Promotion cancelled by user.') {
+                    this._returnPieceToOriginalSquare();
+                    this._setPieceVisibility(true);
+                    return MoveStatus.CANCELLED;
+                }
+                return MoveStatus.INVALID;
+            }
+        }
+
+        const error = this.chessManager.makeMove(this.dragged.from, position);
+        this.pending = false;
+        if(error) 
+            return MoveStatus.INVALID;
+        return MoveStatus.SUCCESS;
     }
 
     private moveAt(pageX: number, pageY: number): void {
@@ -208,6 +263,14 @@ class ChessboardDragController {
             this.currentSquare.classList.remove('drag-over');
             this.currentSquare = null;
         }
+    }
+
+    private _resetPiece() {
+        if(this.dragged.piece === null)
+            return;
+
+        if(this.dragged.square && this.dragged.square.children.length === 0)
+            this.dragged.square.append(this.dragged.piece);
     }
 
     private _resetDragPieceStyles() {
@@ -274,6 +337,20 @@ class ChessboardDragController {
     private _returnPieceToOriginalSquare() {
         if(this.dragged.piece && this.dragged.square) {
             this.dragged.square.append(this.dragged.piece);
+        }
+    }
+
+    private _findMoveFromPosition(position: number): Move | null {
+        for(const move of this.dragged.legals) {
+            if(move.end === position)
+                return move;
+        }
+        return null;
+    }
+
+    private _setPieceVisibility(visible: boolean): void {
+        if(this.dragged.piece) {
+            this.dragged.piece.style.visibility = visible ? "visible" : "hidden";
         }
     }
 

@@ -1,8 +1,8 @@
 import { Board } from "../model/board";
-import { Castles, CastleTypes, Color, DECIMAL, DEFAULT_POSITION, KING, Kings, PieceRepresentation, Pieces, QUEEN, Square, SQUARES } from "../model/constants";
+import { Castles, Color, DECIMAL, DEFAULT_POSITION, KING, Kings, PieceRepresentation, Pieces, PromotionPiece, Square, SQUARES } from "../model/constants";
 import { Move } from "../model/move";
-import { Pawn, Piece } from "../model/piece";
-import { opposite } from "../utils/board-utils";
+import { Piece } from "../model/piece";
+import { isAPromotionSquare, opposite } from "../utils/board-utils";
 
 export default class Chess {
     public board: Board = new Board();
@@ -84,7 +84,7 @@ export default class Chess {
         this.turn = opposite(this.turn);
     }
 
-    public moveUsingPosition(from: number, to: number) {
+    public moveUsingPosition(from: number, to: number, promotion?: PromotionPiece) {
         let piece: Piece | null = this.board.pieces[from];
         if(piece === null) 
             throw Error("Not a valid square!");
@@ -94,6 +94,9 @@ export default class Chess {
 
         for(let move of this.getLegalMovesFor(from)) {
             if(move.start === from && move.end === to) {
+                if(promotion && move.flags.promotion !== promotion) 
+                    continue;
+
                 this.history.push(move);
 
                 if(piece.representation() === KING) 
@@ -104,7 +107,13 @@ export default class Chess {
                 if(move.flags.captured) {
                     this._remove(move.flags.captured.position);
                 }
+
                 this.board.move(move);
+
+                if(move.flags.promotion) {
+                    this._remove(move.end);
+                    this._place(move.flags.promotion as PieceRepresentation, move.piece.color, move.end, false);
+                }
                 this._updateAttackTiles();
                 
                 this.switchTurns();
@@ -115,14 +124,18 @@ export default class Chess {
         throw Error("Not legal move!");
     }
 
-    public move(from: Square, to: Square): void {
+    public move(from: Square, to: Square, promotion?: PromotionPiece): void {
         let current: number = SQUARES[from];
         let target: number = SQUARES[to];
-        this.moveUsingPosition(current, target);
+        this.moveUsingPosition(current, target, promotion);
     }
 
     public isCheckmate(): boolean {
         return false;
+    }
+
+    public isPromotionSquare(position: number) {
+        return isAPromotionSquare(position, this.turn);
     }
 
     public undo(switchTurns: boolean = true): Move | undefined {
@@ -131,8 +144,7 @@ export default class Chess {
             return move;
 
         if(move.flags.promotion) {
-            const piece = move.flags.promotion;
-            this._place(Pieces.Pawn, piece.color, move.end, piece.firstMove);
+            this._place(Pieces.Pawn, move.piece.color, move.end, false);
         }
 
         if(move.flags.captured) {

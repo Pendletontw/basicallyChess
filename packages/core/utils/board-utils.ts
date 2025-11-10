@@ -1,6 +1,7 @@
 import Chess from '../engine/chess';
 import { Board } from '../model/board';
 import { BOARD_SIZE, FILES, Rank, File, KnightDirection, Direction, Color, CastleTypes, CastleSquares, CastleRookSquare, CastleKingSquare } from '../model/constants';
+import { Move } from '../model/move';
 import { Piece } from '../model/piece';
 
 export function isTileOnBoard(position: number): boolean {
@@ -147,6 +148,12 @@ export function canCastle(chess: Chess, color: Color, castle: CastleTypes) {
     }
 
    return true;
+}
+
+export function isAPromotionSquare(position: number, color: Color) {
+    const rank = getRank(position);
+    return (rank === Rank.Eight && color === Color.White ||
+            rank === Rank.One && color === Color.Black);
 }
 
 export function getRank(position: number): Rank {
