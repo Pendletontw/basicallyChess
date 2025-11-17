@@ -230,6 +230,8 @@ class ChessboardDragController {
                     this._setPieceVisibility(true);
                     return MoveStatus.CANCELLED;
                 }
+                this._returnPieceToOriginalSquare();
+                this._resetDragState(false);
                 return MoveStatus.INVALID;
             }
         }
@@ -270,8 +272,11 @@ class ChessboardDragController {
         if(this.dragged.piece === null)
             return;
 
-        if(this.dragged.square && this.dragged.square.children.length === 0)
+        if(this.dragged.square && this.dragged.square.children.length === 0) {
             this.dragged.square.append(this.dragged.piece);
+        } else {
+            this.dragged.piece.remove();
+        }
     }
 
     private _resetDragPieceStyles() {
