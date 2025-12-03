@@ -2,10 +2,10 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   root: './packages/web',
-  optimizeDeps: { include: ["@trent/core"] },
+  optimizeDeps: { include: ["core"] },
   build: {
       commonjsOptions: {
-          include: [/common/, /node_modules/],
+          include: [/core/, /node_modules/],
       },
   },
   server: {
