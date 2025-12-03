@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   root: './packages/web',
-  optimizeDeps: { include: ["core", "web"] },
+  optimizeDeps: { include: ["@trent/core"] },
   build: {
       outDir: "./build",
       emptyOutDir: true,
