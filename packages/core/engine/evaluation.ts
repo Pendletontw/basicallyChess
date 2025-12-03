@@ -1,5 +1,5 @@
 import Chess from "./chess";
-import { Color, Pieces, SQUARES } from "../model/constants";
+import { Color, Pieces } from "../model/constants";
 import { Piece } from "../model/piece";
 import { opposite } from "../utils/board-utils";
 import { Move } from "../model/move";
@@ -16,6 +16,7 @@ const TWO_BISHOPS_BONUS = 25;
 const CAN_CASTLE_BONUS = 50;
 const EARLY_QUEEN_MOVE_PENALTY = -10;
 const KING_SAFETY_BONUS = 35;
+const PIECE_PLACEMENT_MULTIPLIER = 1; 
 
 const PIECE_VALUES: { [key: string]: number } = {
     [Pieces.Pawn]: 100,
@@ -25,6 +26,77 @@ const PIECE_VALUES: { [key: string]: number } = {
     [Pieces.Queen]: 900,
     [Pieces.King]: 20000, 
 };
+
+const getPSTIndex = (square: number, color: Color): number => {
+    return color === Color.White ? square : 63 - square;
+};
+
+const PAWN_PST = [
+    0,  0,  0,  0,  0,  0,  0,  0,
+    5, 10, 10, -20, -20, 10, 10,  5,
+    5, -5, -10,  0,  0, -10, -5,  5,
+    0,  0,  0, 20, 20,  0,  0,  0,
+    5,  5, 10, 25, 25, 10,  5,  5,
+    10, 10, 20, 30, 30, 20, 10, 10,
+    50, 50, 50, 50, 50, 50, 50, 50,
+    0,  0,  0,  0,  0,  0,  0,  0
+];
+
+const KNIGHT_PST = [
+    -50, -40, -30, -30, -30, -30, -40, -50,
+    -40, -20,  0,  5,  5,  0, -20, -40,
+    -30,  5, 10, 15, 15, 10,  5, -30,
+    -30,  0, 15, 20, 20, 15,  0, -30,
+    -30,  5, 15, 20, 20, 15,  5, -30,
+    -30,  0, 10, 15, 15, 10,  0, -30,
+    -40, -20,  0,  0,  0,  0, -20, -40,
+    -50, -40, -30, -30, -30, -30, -40, -50
+];
+
+const BISHOP_PST = [
+    -20, -10, -10, -10, -10, -10, -10, -20,
+    -10,  0,  0,  0,  0,  0,  0, -10,
+    -10,  0,  5, 10, 10,  5,  0, -10,
+    -10,  5,  5, 10, 10,  5,  5, -10,
+    -10,  0, 10, 10, 10, 10,  0, -10,
+    -10, 10, 10, 10, 10, 10, 10, -10,
+    -10,  5,  0,  0,  0,  0,  5, -10,
+    -20, -10, -10, -10, -10, -10, -10, -20
+];
+
+const ROOK_PST = [
+    0,  0,  0,  5,  5,  0,  0,  0,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    5, 10, 10, 10, 10, 10, 10,  5,
+    0,  0,  0,  0,  0,  0,  0,  0
+];
+
+const QUEEN_PST = [ 
+    -20, -10, -10, -5, -5, -10, -10, -20,
+    -10,  0,  0,  0,  0,  0,  0, -10,
+    -10,  0,  5,  5,  5,  5,  0, -10,
+    -5,  0,  5,  5,  5,  5,  0, -5,
+    0,  0,  5,  5,  5,  5,  0, -5,
+    -10,  5,  5,  5,  5,  5,  0, -10,
+    -10,  0,  5,  0,  0,  0,  0, -10,
+    -20, -10, -10, -5, -5, -10, -10, -20
+];
+
+const KING_MIDDLE_PST = [
+    -30, -40, -40, -50, -50, -40, -40, -30,
+    -30, -40, -40, -50, -50, -40, -40, -30,
+    -30, -40, -40, -50, -50, -40, -40, -30,
+    -30, -40, -40, -50, -50, -40, -40, -30,
+    -20, -30, -30, -40, -40, -30, -30, -20,
+    -10, -20, -20, -20, -20, -20, -20, -10,
+    20, 20,  0,  0,  0,  0, 20, 20,
+    20, 30, 10,  0,  0, 10, 30, 20
+];
+
 
 function getPieceValue(piece: Piece): number {
     return PIECE_VALUES[piece.representation()] || 0;
@@ -55,6 +127,37 @@ function pieceValue(pieces: Piece[]): number {
     }
     return pieceValuationScore + (numBishops >= 2 ? TWO_BISHOPS_BONUS : 0);
 }
+
+function piecePlacement(pieces: Piece[], color: Color): number {
+    let placementScore = 0;
+
+    for (const piece of pieces) {
+        const index = getPSTIndex(piece.position, color);
+        
+        switch (piece.representation()) {
+            case Pieces.Pawn:
+                placementScore += PAWN_PST[index];
+                break;
+            case Pieces.Knight:
+                placementScore += KNIGHT_PST[index];
+                break;
+            case Pieces.Bishop:
+                placementScore += BISHOP_PST[index];
+                break;
+            case Pieces.Rook:
+                placementScore += ROOK_PST[index];
+                break;
+            case Pieces.Queen:
+                placementScore += QUEEN_PST[index];
+                break;
+            case Pieces.King:
+                placementScore += KING_MIDDLE_PST[index];
+                break;
+        }
+    }
+    return placementScore * PIECE_PLACEMENT_MULTIPLIER;
+}
+
 
 function mobility(playerMoves: Move[], opponentMoves: Move[]): number {
     const mobilityRatio = opponentMoves.length === 0 ? playerMoves.length : (playerMoves.length * 10.0) / opponentMoves.length;
@@ -130,7 +233,7 @@ function attacks(moves: Move[]): number {
     for (const move of moves) {
         if (move.flags.captured) {
             const movedPieceValue = getPieceValue(move.piece);
-            const attackedPieceValue = getPieceValue(move.flags.captured);
+            const attackedPieceValue = getPieceValue(move.flags.captured as Piece); 
 
             if (movedPieceValue <= attackedPieceValue) {
                 attackScore++;
@@ -140,66 +243,36 @@ function attacks(moves: Move[]): number {
     return attackScore * ATTACK_MULTIPLIER;
 }
 
-function kingSafety(game: Chess, color: Color): number {
-    if (!game.castled[color]) {
-        return 0; 
-    }
-
-    const kingPos = game.kings[color];
-    let safetyScore = 0;
-
-    if (color === Color.White) {
-        if (kingPos === SQUARES.g1) { 
-            const files = [SQUARES.f2, SQUARES.g2, SQUARES.h2];
-            const hasPawnShield = files.every(i => game.board.pieces[i]?.representation() === Pieces.Pawn && game.board.pieces[i]?.color === color);
-            if (hasPawnShield) safetyScore += KING_SAFETY_BONUS;
-        } else if (kingPos === SQUARES.c1) {
-            const files = [SQUARES.a2, SQUARES.b2, SQUARES.c2];
-            const hasPawnShield = files.every(i => game.board.pieces[i]?.representation() === Pieces.Pawn && game.board.pieces[i]?.color === color);
-            if (hasPawnShield) safetyScore += KING_SAFETY_BONUS;
-        }
-    } else {
-        if (kingPos === SQUARES.g8) {
-            const files = [SQUARES.f7, SQUARES.g7, SQUARES.h7];
-            const hasPawnShield = files.every(i => game.board.pieces[i]?.representation() === Pieces.Pawn && game.board.pieces[i]?.color === color);
-            if (hasPawnShield) safetyScore += KING_SAFETY_BONUS;
-        } else if (kingPos === SQUARES.c8) {
-            const files = [SQUARES.a7, SQUARES.b7, SQUARES.c7];
-            const hasPawnShield = files.every(i => game.board.pieces[i]?.representation() === Pieces.Pawn && game.board.pieces[i]?.color === color);
-            if (hasPawnShield) safetyScore += KING_SAFETY_BONUS;
-        }
-    }
-    
-    return safetyScore;
-}
-
-
 function scorePlayer(game: Chess, color: Color): number {
-    const playerMoves = game.getAllLegalMoves(game.turn); 
-    const opponentMoves = game.getAllLegalMoves(opposite(game.turn)); 
+    const playerMoves = game.getAllLegalMoves(color); 
+    const opponentMoves = game.getAllLegalMoves(opposite(color)); 
     const pieces = getActivePieces(game, color);
     return (
         pieceValue(pieces) +
+        piecePlacement(pieces, color) +
         mobility(playerMoves, opponentMoves) +
         check(game, color) +
         castled(game, color) +
         pawnStructure(pieces) +
         canCastle(game, color) +
         queenOutEarly(game, color) +
-        attacks(playerMoves) +
-        kingSafety(game, color)
+        attacks(playerMoves) 
     );
 }
 
 export function evaluatePosition(game: Chess, depth: number): number {
+    if (game.isCheckmate()) {
+        return game.turn === Color.White ? -CHECK_MATE_BONUS : CHECK_MATE_BONUS;
+    }
+    
     const whiteScore = scorePlayer(game, Color.White);
     const blackScore = scorePlayer(game, Color.Black);
 
-    const whiteAdvantage = whiteScore - blackScore;
+    let whiteAdvantage = whiteScore - blackScore;
 
-    if (game.turn === Color.Black) {
-        return -whiteAdvantage;
+    if (Math.abs(whiteAdvantage) === CHECK_MATE_BONUS) {
+        whiteAdvantage -= (Math.sign(whiteAdvantage) * depth * DEPTH_BONUS);
     }
     
-    return whiteAdvantage;
+    return game.turn === Color.White ? whiteAdvantage : -whiteAdvantage;
 }
