@@ -1,0 +1,59 @@
+:root {
+	--white: rgba(193, 188, 237, 0.9);
+	--black: rgba(108, 95, 195, 0.5);
+	--background: rgb(62, 53, 119);
+	--border-radius: 1px;
+	--border-color: rgb(127, 114, 199);
+	--border: 5px solid var(--border-color);
+	--box-shadow: 0 0 0 5px var(--border-color);
+	--drag-over-border-color: rgba(43, 38, 71, 0.49);
+	--drag-over-border: 3px solid var(--drag-over-border-color);
+}
+
+html[data-theme='standard'] {
+	--white: rgba(193, 188, 237, 0.9);
+	--black: rgba(108, 95, 195, 0.5);
+	--background: rgb(62, 53, 119);
+	--border-radius: 1px;
+	--border-color: rgb(127, 114, 199);
+	--border: 5px solid var(--border-color);
+	--box-shadow: 0 0 0 5px var(--border-color);
+	--drag-over-border-color: rgba(43, 38, 71, 0.49);
+	--drag-over-border: 3px solid var(--drag-over-border-color);
+}
+
+html[data-theme='dark'] {
+	--white: rgba(193, 188, 237, 0.9);
+	--black: rgba(108, 95, 195, 0.5);
+	--background: rgb(62, 53, 119);
+	--border-radius: 1px;
+	--border-color: rgb(127, 114, 199);
+	--border: 5px solid var(--border-color);
+	--box-shadow: 0 0 0 5px var(--border-color);
+	--drag-over-border-color: rgba(43, 38, 71, 0.49);
+	--drag-over-border: 3px solid var(--drag-over-border-color);
+}
+
+html[data-theme='light'] {
+	--white: rgba(193, 188, 237, 0.9);
+	--black: rgba(108, 95, 195, 0.5);
+	--background: rgb(62, 53, 119);
+	--border-radius: 1px;
+	--border-color: rgb(127, 114, 199);
+	--border: 5px solid var(--border-color);
+	--box-shadow: 0 0 0 5px var(--border-color);
+	--drag-over-border-color: rgba(43, 38, 71, 0.49);
+	--drag-over-border: 3px solid var(--drag-over-border-color);
+}
+
+html[data-theme='chessdotcom'] {
+	--white: #ebecd0;
+	--black: #779556;
+	--background: #302e2b;
+	--border-radius: 2px;
+	--border-color: transparent;
+	--border: none;
+	--box-shadow: none;
+	--drag-over-border-color: rgba(165, 162, 180, 0.49);
+	--drag-over-border: 3px solid var(--drag-over-border-color);
+}

@@ -1,0 +1,188 @@
+*,
+*::before,
+*::after {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	position: relative;
+	background: var(--background);
+}
+
+#board {
+	display: grid;
+	grid-template-columns: repeat(8, 1fr);
+	grid-template-rows: repeat(8, 1fr);
+	width: fit-content;
+	margin-inline: auto;
+	margin-top: 200px;
+	box-shadow: var(--box-shadow);
+	border-radius: var(--border-radius);
+	position: relative;
+	-webkit-user-select: none; /* Safari */
+	-ms-user-select: none; /* IE 10 and IE 11 */
+	user-select: none; /* Standard syntax */
+}
+
+.square {
+	--square-size: 100px;
+	height: var(--square-size);
+	width: var(--square-size);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	position: relative;
+}
+
+.square.drag-over {
+	border: var(--drag-over-border);
+}
+
+.black {
+	background: var(--black);
+}
+
+.white {
+	background: var(--white);
+}
+
+.WhiteTurn {
+	text-align: center;
+	color: var(--white);
+}
+
+.square > img {
+	height: var(--square-size);
+	width: var(--square-size);
+	padding: 1%;
+	cursor: grab;
+    z-index: 2;
+}
+
+.square:nth-of-type(1) {
+	border-radius: var(--border-radius) 0 0 0;
+}
+.square:nth-of-type(8) {
+	border-radius: 0 var(--border-radius) 0 0;
+}
+.square:nth-of-type(57) {
+	border-radius: 0 0 0 var(--border-radius);
+}
+.square:nth-of-type(64) {
+	border-radius: 0 0 var(--border-radius) 0;
+}
+
+.square.active::before {
+    content: '';
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1;
+    background: rgba(255, 255, 0, .5);
+    position: absolute;
+    z-index: 1;
+}
+
+.target:empty::before {
+    content: '';
+    width: 35%;
+    height: 35%;
+    aspect-ratio: 1;
+    background: rgba(0, 0, 0, .25);
+    border-radius: 50%;
+}
+
+.target:not(:empty)::before{
+    content: '';
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1;
+    position: absolute;
+    border: .5rem solid rgba(0, 0, 0, .25); 
+    border-radius: 50%;
+}
+
+.square:not(.active).moved::after {
+    content: '';
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1;
+    background: rgba(255, 255, 0, .5);
+    position: absolute;
+    z-index: 1;
+}
+
+#options {
+    background: rgba(0, 0, 0, .5);
+    margin-block: 1rem;
+    border-radius: 5px;
+    display: flex;
+}
+
+#options > button {
+    display: flex;
+    text-align: center;
+    color: white;
+    padding: .5rem 1rem;
+    background: var(--background);
+    border: none;
+    outline: none;
+    margin: 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#options > button:hover {
+    opacity: .7;
+}
+
+.promotion {
+    display: flex; 
+    flex-direction: column; 
+    background-color: white;
+    box-shadow: 0px 3px 10px rgb(100, 100, 100); 
+}
+
+.promotion.B {
+    flex-direction: column-reverse; 
+}
+
+.promotion.W {
+    flex-direction: column;
+}
+
+.promotion button {
+    width: inherit;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    display: grid;
+    cursor: pointer;
+}
+
+.promotion button:hover {
+    background: rgba(0, 0, 0, .05);
+}
+
+.promotion button img {
+    width: inherit;
+}
+
+.promotion .cancel {
+    height: 12.5%;
+    display: grid;
+    place-items: center;
+    background: rgba(0, 0, 0, .1);
+}
+
+.promotion .cancel svg {
+    width: 45%;
+    height: 45%;
+    opacity: .5;
+}

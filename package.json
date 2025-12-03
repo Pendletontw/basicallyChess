@@ -1,0 +1,31 @@
+{
+    "name": "@trent/chess-repo",
+    "version": "1.0.0",
+    "description": "entire chess application",
+    "homepage": "https://github.com/Pendletontw/basicallyChess#readme",
+    "private": true,
+    "bugs": {
+        "url": "https://github.com/Pendletontw/basicallyChess/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Pendletontw/basicallyChess.git"
+    },
+    "license": "ISC",
+    "author": "Trent Pendleton",
+    "type": "module",
+    "main": "index.js",
+    "scripts": {
+        "build": "tsc -b tsconfig.build.json",
+        "web": "vite --force",
+        "go": "tsc -b tsconfig.build.json && node packages/cli/dist/index.js",
+        "cli": "npm run go",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "workspaces": [
+        "packages/*"
+    ],
+    "devDependencies": {
+        "vite": "^7.1.12"
+    }
+}
