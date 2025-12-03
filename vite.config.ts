@@ -2,11 +2,12 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   root: './packages/web',
-  optimizeDeps: { include: ["core"] },
+  optimizeDeps: { include: ["core", "web"] },
   build: {
-      outDir: "./packages/web/build",
+      outDir: "./build",
+      emptyOutDir: true,
       commonjsOptions: {
-          include: [/core/, /node_modules/],
+          include: [/core/, /web/, /node_modules/],
       },
   },
   server: {
