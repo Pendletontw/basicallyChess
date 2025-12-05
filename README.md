@@ -3,7 +3,7 @@ Hello! Hi! This is my engine!
 To run this project, you must follow these instructions:
 
 1st. Make sure you have node/npm 
-2nd. When in the basicallyChess directory, run "npm run build"
+2nd. When in the basicallyChess directory, run "npm install" and "npm run build"
 3rd. Next run "npm run web"
 
 This should create a Vite build that will be locally hosted
